@@ -1,18 +1,2514 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/train.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RAILSETU – AI-Powered Automatic Block Planning for Indian Railways</title>
-    <meta name="description" content="AI-Powered Automatic Block Planning prototype for Indian Railways operations command center. Bridging Maintenance and Movement Intelligently." />
-    <!-- Google Fonts: Inter & JetBrains Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  </head>
-  <body class="bg-[#0F172A] text-slate-100 min-h-screen antialiased selection:bg-[#FF6B00] selection:text-white">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAILSETU – AI-Powered Automatic Block Planning for Indian Railways</title>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: '#0F172A',
+            panel: '#1E293B',
+            saffron: '#FF6B00',
+            railgreen: '#22C55E',
+            railamber: '#F59E0B',
+            railred: '#EF4444',
+            railblue: '#3B82F6',
+            railemergency: '#F97316',
+            railaiviolet: '#8B5CF6',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #0F172A;
+      color: #F8FAFC;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Custom Scrollbar for railway control center aesthetic */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0F172A;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #FF6B00;
+    }
+    /* Pulsing animations */
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.9; box-shadow: 0 0 15px rgba(255, 107, 0, 0.4); }
+      50% { opacity: 0.5; box-shadow: 0 0 5px rgba(255, 107, 0, 0.1); }
+    }
+    .pulse-glow {
+      animation: pulseGlow 2.5s infinite;
+    }
+  </style>
+</head>
+<body class="bg-[#0F172A] text-slate-100 min-h-screen flex flex-col antialiased selection:bg-[#FF6B00] selection:text-white">
+
+  <!-- Top System Telemetry Bar -->
+  <div class="bg-[#1E293B] px-4 py-1.5 text-xs text-slate-300 flex flex-wrap justify-between items-center border-b border-slate-700/60 sticky top-0 z-50">
+    <div class="flex items-center space-x-2">
+      <span class="inline-block w-2 h-2 rounded-full bg-[#22C55E] animate-ping"></span>
+      <span class="font-mono text-[#22C55E] font-bold tracking-wider text-[11px]">SYSTEM ONLINE</span>
+      <span class="text-slate-600">|</span>
+      <span class="text-slate-300 font-medium hidden sm:inline">CONTROL DIVISION: Prayagraj – Pt. Deen Dayal Upadhyaya Trunk</span>
+      <span class="bg-[#FF6B00]/20 text-[#FF6B00] px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase border border-[#FF6B00]/40">
+        Synthetic Demo Data Only
+      </span>
+    </div>
+    <div class="flex items-center space-x-4 font-mono text-xs text-slate-300">
+      <span>CORRIDOR: NDLS ⇄ HWH (1,451 KM)</span>
+      <span class="text-slate-600">•</span>
+      <span class="text-amber-400 font-bold" id="clock-display">09:30:00 IST</span>
+    </div>
+  </div>
+
+  <!-- Main Navigation Bar -->
+  <header class="bg-[#0F172A]/95 backdrop-blur border-b border-slate-800 sticky top-7 z-40 shadow-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Brand Logo -->
+        <div onclick="switchTab('overview')" class="flex items-center space-x-3 cursor-pointer group">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6B00] to-amber-600 flex items-center justify-center shadow-lg shadow-[#FF6B00]/25 group-hover:scale-105 transition-transform">
+            <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 15h16" />
+              <path d="M4 9h16" />
+              <path d="M7 6v12" />
+              <path d="M17 6v12" />
+              <path d="m3 19 18 0" />
+              <circle cx="12" cy="12" r="2" fill="currentColor" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="text-xl font-black tracking-wider text-white">RAIL<span class="text-[#FF6B00]">SETU</span></span>
+              <span class="text-[9px] bg-slate-800 text-slate-400 border border-slate-700 px-1.5 py-0.5 rounded font-mono font-semibold">HACKATHON-PROTOTYPE</span>
+            </div>
+            <p class="text-[11px] text-slate-400 font-normal leading-tight hidden sm:block">
+              Bridging Maintenance and Movement — Intelligently
+            </p>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="hidden lg:flex space-x-1 items-center font-sans text-xs">
+          <button onclick="switchTab('overview')" id="nav-overview" class="nav-btn px-3 py-2 rounded-lg font-medium transition text-[#FF6B00] bg-[#1E293B] border border-[#FF6B00]/40">Overview</button>
+          <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn px-3 py-2 rounded-lg font-medium transition text-slate-300 hover:text-white hover:bg-slate-800/60">Dashboard</button>
+          <button onclick="switchTab('tracker')" id="nav-tracker" class="nav-btn px-3 py-2 rounded-lg font-medium transition text-slate-300 hover:text-white hover:bg-slate-800/60">Where Is My Train</button>
+          <button onclick="switchTab('request')" id="nav-request" class="nav-btn px-3 py-2 rounded-lg font-medium transition text-slate-300 hover:text-white hover:bg-slate-800/60">Submit Request</button>
+          <button onclick="switchTab('planner')" id="nav-planner" class="nav-btn px-3 py-2 rounded-lg font-medium transition text-slate-300 hover:text-white hover:bg-slate-800/60 flex items-center space-x-1">
+            <span>Auto Planner</span>
+            <span id="nav-pending-badge" class="bg-[#FF6B00] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">3</span>
+          </button>
+          <button onclick="switchTab('whatif')" id="nav-whatif" class="nav-btn px-3 py-2 rounded-lg font-medium transition text-slate-300 hover:text-white hover:bg-slate-800/60">What-If Sim</button>
+          <button onclick="switchTab('audit')" id="nav-audit" class="nav-btn px-3 py-2 rounded-lg font-medium transition text-slate-300 hover:text-white hover:bg-slate-800/60">Approval & Audit</button>
+          <button onclick="switchTab('architecture')" id="nav-architecture" class="nav-btn px-3 py-2 rounded-lg font-medium transition text-slate-300 hover:text-white hover:bg-slate-800/60">Architecture</button>
+        </nav>
+
+        <!-- Quick Action CTA -->
+        <div class="flex items-center space-x-2">
+          <button onclick="switchTab('planner')" class="bg-gradient-to-r from-[#FF6B00] to-amber-500 hover:from-[#ff7b1a] hover:to-amber-400 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-lg shadow-[#FF6B00]/25 transition flex items-center space-x-1.5 cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>Run Planner</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Tab Bar (For responsive tablets/phones) -->
+  <div class="lg:hidden bg-[#1E293B] border-b border-slate-800 px-4 py-2 flex overflow-x-auto space-x-2 text-xs font-mono">
+    <button onclick="switchTab('overview')" class="whitespace-nowrap px-2.5 py-1 rounded bg-slate-800 text-slate-200">Overview</button>
+    <button onclick="switchTab('dashboard')" class="whitespace-nowrap px-2.5 py-1 rounded bg-slate-800 text-slate-200">Dashboard</button>
+    <button onclick="switchTab('tracker')" class="whitespace-nowrap px-2.5 py-1 rounded bg-slate-800 text-slate-200">Trains</button>
+    <button onclick="switchTab('request')" class="whitespace-nowrap px-2.5 py-1 rounded bg-slate-800 text-slate-200">Request</button>
+    <button onclick="switchTab('planner')" class="whitespace-nowrap px-2.5 py-1 rounded bg-slate-800 text-[#FF6B00] font-bold">Planner</button>
+    <button onclick="switchTab('whatif')" class="whitespace-nowrap px-2.5 py-1 rounded bg-slate-800 text-slate-200">What-If</button>
+    <button onclick="switchTab('audit')" class="whitespace-nowrap px-2.5 py-1 rounded bg-slate-800 text-slate-200">Audit</button>
+    <button onclick="switchTab('architecture')" class="whitespace-nowrap px-2.5 py-1 rounded bg-slate-800 text-slate-200">Architecture</button>
+  </div>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- ==================== TAB 1: OVERVIEW ==================== -->
+    <div id="tab-overview" class="tab-content space-y-16">
+      <!-- Hero -->
+      <section class="relative overflow-hidden pt-8 pb-12 text-center">
+        <div class="inline-flex items-center space-x-2 bg-[#1E293B] border border-[#FF6B00]/40 px-3.5 py-1.5 rounded-full text-xs text-slate-300 mb-6 shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-[#FF6B00] animate-ping"></span>
+          <span class="font-semibold text-white">RAILSETU HACKATHON PROTOTYPE</span>
+          <span class="text-slate-500">•</span>
+          <span class="text-[#FF6B00] font-mono">Zero Uncoordinated Blocks</span>
+        </div>
+
+        <h1 class="text-4xl sm:text-6xl font-black text-white tracking-tight leading-tight mb-6">
+          AI-Powered Automatic <br>
+          <span class="bg-gradient-to-r from-[#FF6B00] via-amber-400 to-orange-500 bg-clip-text text-transparent">
+            Block Planning
+          </span> for Indian Railways
+        </h1>
+
+        <p class="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto mb-8 font-light leading-relaxed">
+          “Bridging Maintenance and Movement — Intelligently.” <br>
+          Maximize asset availability while minimizing train disruption across high-density Indian Railways trunk routes.
+        </p>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <button onclick="switchTab('dashboard')" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#FF6B00] to-amber-500 hover:from-[#ff7b1a] hover:to-amber-400 text-white font-bold text-sm shadow-xl shadow-[#FF6B00]/25 transition-all transform hover:-translate-y-0.5 flex items-center justify-center space-x-2 cursor-pointer">
+            <span>Open Interactive Demo</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </button>
+
+          <button onclick="scrollToHowItWorks()" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#1E293B] hover:bg-slate-800 text-slate-200 border border-slate-700 font-semibold text-sm transition flex items-center justify-center space-x-2 cursor-pointer">
+            <span>See How It Works</span>
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Quick Corridor Strip -->
+        <div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto text-left">
+          <div class="bg-[#1E293B]/80 border border-slate-800 rounded-xl p-4">
+            <div class="text-2xl font-black font-mono text-white">1,451 km</div>
+            <div class="text-xs text-slate-400">NDLS–HWH Golden Corridor</div>
+          </div>
+          <div class="bg-[#1E293B]/80 border border-slate-800 rounded-xl p-4">
+            <div class="text-2xl font-black font-mono text-[#22C55E]">&lt; 3 sec</div>
+            <div class="text-xs text-slate-400">CP-SAT Window Optimization</div>
+          </div>
+          <div class="bg-[#1E293B]/80 border border-slate-800 rounded-xl p-4">
+            <div class="text-2xl font-black font-mono text-[#FF6B00]">100%</div>
+            <div class="text-xs text-slate-400">Hard Safety Rule Compliance</div>
+          </div>
+          <div class="bg-[#1E293B]/80 border border-slate-800 rounded-xl p-4">
+            <div class="text-2xl font-black font-mono text-[#8B5CF6]">Human+AI</div>
+            <div class="text-xs text-slate-400">Decision Support System</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Problem vs Solution -->
+      <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Problem Card -->
+        <div class="bg-[#1E293B] border border-red-500/30 rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+          <div class="flex items-center space-x-3 mb-6">
+            <div class="w-10 h-10 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center font-bold">✕</div>
+            <div>
+              <h4 class="text-lg font-bold text-white">The Challenge: Manual & Fragmented Planning</h4>
+              <p class="text-xs text-slate-400">Siloed phone/memo coordination between departments</p>
+            </div>
+          </div>
+          <ul class="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <li class="flex items-start space-x-3">
+              <span class="text-red-400 font-bold mt-0.5">•</span>
+              <div><strong class="text-white">Manual, siloed block planning:</strong> Engineering (P-Way), Electrical (OHE), and Signal (S&T) apply independently on spreadsheets with zero integrated visibility.</div>
+            </li>
+            <li class="flex items-start space-x-3">
+              <span class="text-red-400 font-bold mt-0.5">•</span>
+              <div><strong class="text-white">Train–block conflicts discovered too late:</strong> Blocks frequently cancelled at the last hour or forced to truncate when Rajdhani/Vande Bharat trains approach.</div>
+            </li>
+            <li class="flex items-start space-x-3">
+              <span class="text-red-400 font-bold mt-0.5">•</span>
+              <div><strong class="text-white">No integration of asset health and train schedules:</strong> Urgent maintenance is repeatedly deferred, leading to speed restrictions and track safety concerns.</div>
+            </li>
+            <li class="flex items-start space-x-3">
+              <span class="text-red-400 font-bold mt-0.5">•</span>
+              <div><strong class="text-white">No dynamic re-planning when trains are delayed:</strong> When upstream trains run 30+ minutes late, pre-sanctioned blocks become invalid with no instant alternative slot.</div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Solution Card -->
+        <div class="bg-[#1E293B] border border-[#FF6B00]/40 rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+          <div class="flex items-center space-x-3 mb-6">
+            <div class="w-10 h-10 rounded-xl bg-[#FF6B00]/20 text-[#FF6B00] flex items-center justify-center font-bold">✓</div>
+            <div>
+              <h4 class="text-lg font-bold text-white">The Solution: RAILSETU AI Synthesis</h4>
+              <p class="text-xs text-slate-400">Mathematical constraint optimization with human sign-off</p>
+            </div>
+          </div>
+          <ul class="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <li class="flex items-start space-x-3">
+              <span class="text-emerald-400 font-bold mt-0.5">•</span>
+              <div><strong class="text-white">Automatic feasible block windows:</strong> CP-SAT mathematical optimization scans corridor traffic schedules in seconds to propose minimal-disruption slots.</div>
+            </li>
+            <li class="flex items-start space-x-3">
+              <span class="text-emerald-400 font-bold mt-0.5">•</span>
+              <div><strong class="text-white">Clear impact on trains, delays & resources:</strong> Real-time estimation of passenger delay minutes, priority protection, and gang machine availability.</div>
+            </li>
+            <li class="flex items-start space-x-3">
+              <span class="text-emerald-400 font-bold mt-0.5">•</span>
+              <div><strong class="text-white">What-if simulation & dynamic re-planning:</strong> Interactive Gantt timeline with drag-and-drop block shifts and instant re-planning if a train is delayed.</div>
+            </li>
+            <li class="flex items-start space-x-3">
+              <span class="text-emerald-400 font-bold mt-0.5">•</span>
+              <div><strong class="text-white">Human-in-the-loop approval with full audit trail:</strong> Controllers make the final call with tamper-evident digital sign-offs and regulatory justification logs.</div>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Solution Flow Diagram -->
+      <section class="bg-[#1E293B]/70 border border-slate-800 rounded-2xl p-6 sm:p-8">
+        <div class="text-center mb-8">
+          <h3 class="text-xs font-mono font-bold tracking-widest text-[#FF6B00] uppercase mb-1">Closed-Loop Flow</h3>
+          <h4 class="text-xl font-bold text-white">How Information Moves Through RAILSETU</h4>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3 text-center">
+          <div class="bg-[#0F172A] border border-blue-500/50 rounded-xl p-3 shadow">
+            <div class="text-2xl mb-1">📝</div>
+            <div class="font-bold text-xs text-white">Request</div>
+            <div class="text-[10px] text-slate-400 mt-1">P-Way/OHE submit</div>
+          </div>
+          <div class="bg-[#0F172A] border border-amber-500/50 rounded-xl p-3 shadow">
+            <div class="text-2xl mb-1">⚡</div>
+            <div class="font-bold text-xs text-white">Optimize</div>
+            <div class="text-[10px] text-slate-400 mt-1">CP-SAT solver</div>
+          </div>
+          <div class="bg-[#0F172A] border border-violet-500/50 rounded-xl p-3 shadow">
+            <div class="text-2xl mb-1">🎯</div>
+            <div class="font-bold text-xs text-white">Recommend</div>
+            <div class="text-[10px] text-slate-400 mt-1">Ranked slots</div>
+          </div>
+          <div class="bg-[#0F172A] border border-indigo-500/50 rounded-xl p-3 shadow">
+            <div class="text-2xl mb-1">🔄</div>
+            <div class="font-bold text-xs text-white">Simulate</div>
+            <div class="text-[10px] text-slate-400 mt-1">Drag Gantt slot</div>
+          </div>
+          <div class="bg-[#0F172A] border border-emerald-500/50 rounded-xl p-3 shadow">
+            <div class="text-2xl mb-1">✅</div>
+            <div class="font-bold text-xs text-white">Approve</div>
+            <div class="text-[10px] text-slate-400 mt-1">Controller signs</div>
+          </div>
+          <div class="bg-[#0F172A] border border-sky-500/50 rounded-xl p-3 shadow">
+            <div class="text-2xl mb-1">📡</div>
+            <div class="font-bold text-xs text-white">Monitor</div>
+            <div class="text-[10px] text-slate-400 mt-1">Live positions</div>
+          </div>
+          <div class="bg-[#0F172A] border border-[#FF6B00]/50 rounded-xl p-3 shadow">
+            <div class="text-2xl mb-1">🔁</div>
+            <div class="font-bold text-xs text-white">Re-plan</div>
+            <div class="text-[10px] text-slate-400 mt-1">Dynamic adjust</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step by Step (How It Works) -->
+      <section id="how-it-works" class="space-y-6">
+        <div class="text-center">
+          <h2 class="text-xs font-mono font-bold tracking-widest text-[#FF6B00] uppercase mb-2">Operational Protocol</h2>
+          <h3 class="text-3xl font-extrabold text-white">How It Works in 6 Steps</h3>
+          <p class="text-xs text-slate-400 mt-2">
+            Safety constraints are hard rules; AI recommends, humans decide.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-6 hover:border-[#FF6B00]/50 transition">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-2xl font-black font-mono text-[#FF6B00]">01</span>
+              <span class="text-[10px] font-mono uppercase bg-[#0F172A] text-slate-400 px-2 py-0.5 rounded">Intake</span>
+            </div>
+            <h4 class="text-base font-bold text-white mb-2">Maintenance Request Submission</h4>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Field section engineers submit maintenance demands specifying corridor section, work nature (track renewal, OHE, signal), duration, required machines, and acceptable date windows.
+            </p>
+          </div>
+
+          <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-6 hover:border-[#FF6B00]/50 transition">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-2xl font-black font-mono text-[#FF6B00]">02</span>
+              <span class="text-[10px] font-mono uppercase bg-[#0F172A] text-slate-400 px-2 py-0.5 rounded">Validation</span>
+            </div>
+            <h4 class="text-base font-bold text-white mb-2">Data Validation & Conflict Pre-Check</h4>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              RAILSETU aggregates scheduled timetables, simulated train positions, and upstream blocks across neighboring divisions to establish corridor constraints.
+            </p>
+          </div>
+
+          <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-6 hover:border-[#FF6B00]/50 transition">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-2xl font-black font-mono text-[#FF6B00]">03</span>
+              <span class="text-[10px] font-mono uppercase bg-[#0F172A] text-slate-400 px-2 py-0.5 rounded">Safety Rules</span>
+            </div>
+            <h4 class="text-base font-bold text-white mb-2">Feasible Window Detection</h4>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Constraint models identify natural traffic lull intervals. Safety rules enforce non-negotiable 15-minute headway buffers before and after blocks.
+            </p>
+          </div>
+
+          <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-6 hover:border-[#FF6B00]/50 transition">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-2xl font-black font-mono text-[#FF6B00]">04</span>
+              <span class="text-[10px] font-mono uppercase bg-[#0F172A] text-slate-400 px-2 py-0.5 rounded">Optimization</span>
+            </div>
+            <h4 class="text-base font-bold text-white mb-2">Optimization & Ranking of Plans</h4>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Candidates are evaluated on a multi-objective function: minimize passenger delay minutes, strictly protect Rajdhani/Vande Bharat paths, and optimize machine utilization.
+            </p>
+          </div>
+
+          <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-6 hover:border-[#FF6B00]/50 transition">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-2xl font-black font-mono text-[#FF6B00]">05</span>
+              <span class="text-[10px] font-mono uppercase bg-[#0F172A] text-slate-400 px-2 py-0.5 rounded">Simulation</span>
+            </div>
+            <h4 class="text-base font-bold text-white mb-2">What-If Simulation & Comparison</h4>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Controllers can test sudden train delays or emergency rail fractures, dragging the block on an interactive Gantt chart to instantly visualize collision warnings and delay metrics.
+            </p>
+          </div>
+
+          <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-6 hover:border-[#FF6B00]/50 transition">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-2xl font-black font-mono text-[#FF6B00]">06</span>
+              <span class="text-[10px] font-mono uppercase bg-[#0F172A] text-slate-400 px-2 py-0.5 rounded">Execution</span>
+            </div>
+            <h4 class="text-base font-bold text-white mb-2">Approval, Execution & Dynamic Re-Plan</h4>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              The Chief Controller grants digital authorization. If upstream trains suffer en-route delays, RAILSETU dynamically calculates re-planned slots to prevent traffic gridlock.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Demo Data Disclaimer -->
+      <section class="bg-gradient-to-r from-[#1E293B] to-[#0F172A] border-2 border-dashed border-amber-500/40 rounded-2xl p-6">
+        <div class="flex items-start space-x-3">
+          <span class="text-2xl">⚠️</span>
+          <div>
+            <h4 class="font-bold text-white text-sm">Demo Data & Prototype Notice</h4>
+            <p class="text-xs text-slate-300 mt-1">
+              All data, train numbers, block schedules, and delays in this prototype are <strong class="text-amber-300">synthetic and for demonstration only</strong>. No real Indian Railways databases (CRIS, FOIS, COA, or ICMS) are connected.
+            </p>
+            <div class="mt-3 flex flex-wrap gap-4 text-xs font-mono text-slate-300">
+              <span>Corridor: <strong>NDLS–CNB–MGS–ASN–HWH</strong></span>
+              <span>•</span>
+              <span>Trains: <strong>Rajdhani, Vande Bharat, Mail, Freight</strong></span>
+              <span>•</span>
+              <span>Tasks: <strong>PQRS Track Renewal, OHE, Signals, Rail Grinding</strong></span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== TAB 2: DASHBOARD ==================== -->
+    <div id="tab-dashboard" class="tab-content hidden space-y-8">
+      <!-- Dashboard Header -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#1E293B] p-6 rounded-2xl border border-slate-800 shadow-xl">
+        <div>
+          <div class="flex items-center space-x-2">
+            <h2 class="text-2xl font-black text-white">Railway Operations Command Center</h2>
+            <span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono">
+              Live Monitoring
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">
+            Real-time track availability, maintenance block status, and active train conflict index across NDLS–HWH trunk line.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <button onclick="switchTab('request')" class="px-4 py-2 bg-[#FF6B00] hover:bg-[#ff7b1a] text-white text-xs font-bold rounded-xl shadow-lg shadow-[#FF6B00]/20 transition flex items-center space-x-1.5 cursor-pointer">
+            <span>+ Create Request</span>
+          </button>
+          <button onclick="switchTab('planner')" class="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-violet-600/20 transition flex items-center space-x-1.5 cursor-pointer">
+            <span>⚡ Run Planner</span>
+          </button>
+          <button onclick="filterSectionConflict()" class="px-4 py-2 bg-[#0F172A] hover:bg-slate-800 text-red-400 border border-red-500/40 text-xs font-bold rounded-xl transition cursor-pointer">
+            <span>⚠️ View Conflicts (1)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-5 shadow-lg">
+          <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400">Asset Availability</span>
+          <div class="text-3xl font-black font-mono text-[#22C55E] mt-1">71%</div>
+          <span class="text-[10px] text-slate-400 mt-1 block">5 of 7 trunk sections clear</span>
+          <div class="mt-4 w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-[#22C55E] h-1.5 rounded-full" style="width: 71%"></div>
+          </div>
+        </div>
+
+        <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-5 shadow-lg">
+          <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400">Planned Blocks</span>
+          <div class="text-3xl font-black font-mono text-[#F59E0B] mt-1" id="kpi-planned-blocks">2</div>
+          <span class="text-[10px] text-slate-400 mt-1 block">Scheduled in current 24h cycle</span>
+          <div class="mt-4 text-[11px] text-amber-400 font-medium">PQRS Renewal + OHE Inspection</div>
+        </div>
+
+        <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-5 shadow-lg">
+          <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400">Open Conflicts</span>
+          <div class="text-3xl font-black font-mono text-[#EF4444] mt-1">1</div>
+          <span class="text-[10px] text-slate-400 mt-1 block">Requires re-plan or diversion</span>
+          <div class="mt-4 text-[11px] text-red-400 font-semibold">Section PRYJ–DDU flagged</div>
+        </div>
+
+        <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-5 shadow-lg">
+          <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400">Critical Tasks</span>
+          <div class="text-3xl font-black font-mono text-[#F97316] mt-1" id="kpi-critical-tasks">1</div>
+          <span class="text-[10px] text-slate-400 mt-1 block">Safety-critical track renewals</span>
+          <div class="mt-4 text-[11px] text-orange-400">High rail fatigue threshold</div>
+        </div>
+      </div>
+
+      <!-- Linear Corridor Map -->
+      <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-slate-800 gap-2">
+          <div>
+            <h3 class="text-base font-bold text-white">NDLS ⇄ HWH Trunk Line Section Status</h3>
+            <p class="text-xs text-slate-400">Click any section to inspect trains, speed restrictions, and block plans</p>
+          </div>
+          <!-- Legend -->
+          <div class="flex items-center space-x-4 text-xs font-mono">
+            <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-[#22C55E]"></span><span>Available</span></span>
+            <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-[#F59E0B]"></span><span>Block Planned</span></span>
+            <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-[#EF4444]"></span><span>Conflict</span></span>
+          </div>
+        </div>
+
+        <!-- Visual Map -->
+        <div class="relative py-6 overflow-x-auto">
+          <div class="min-w-[800px] flex items-center justify-between relative px-6">
+            <div class="absolute top-1/2 left-8 right-8 h-2 bg-slate-700 -translate-y-1/2 rounded-full z-0"></div>
+            <div id="corridor-nodes" class="w-full flex justify-between relative z-10">
+              <!-- Nodes populated dynamically by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Section Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-[#0F172A] text-slate-400 uppercase font-mono text-[10px] border-y border-slate-800">
+              <tr>
+                <th class="py-3 px-4">Section ID</th>
+                <th class="py-3 px-4">Section Name</th>
+                <th class="py-3 px-4">Length</th>
+                <th class="py-3 px-4">Tracks</th>
+                <th class="py-3 px-4">Max Speed</th>
+                <th class="py-3 px-4">Division</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="sections-table-body" class="divide-y divide-slate-800/80 font-mono text-xs">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 3: TRAIN TRACKER & TIMETABLE ==================== -->
+    <div id="tab-tracker" class="tab-content hidden space-y-6">
+      <div class="bg-[#1E293B] p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="flex items-center space-x-2">
+            <h2 class="text-2xl font-black text-white">Live Train Tracker & Timetable</h2>
+            <span class="bg-sky-500/20 text-sky-400 border border-sky-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono">
+              Where Is My Train (Simulated)
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">
+            Simulated GPS/Odometer train telemetry and corridor time passage.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <input
+            type="text"
+            id="train-search-input"
+            oninput="renderTrainTable()"
+            placeholder="Search train #, name, city..."
+            class="bg-[#0F172A] border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#FF6B00] w-full sm:w-56"
+          >
+          <select
+            id="section-filter-select"
+            onchange="renderTrainTable()"
+            class="bg-[#0F172A] border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#FF6B00] font-mono cursor-pointer"
+          >
+            <option value="ALL">All Sections (Entire Corridor)</option>
+            <!-- Populated by JS -->
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Table Column (7 cols) -->
+        <div class="lg:col-span-7 bg-[#1E293B] border border-slate-800 rounded-2xl p-5 shadow-xl">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
+              Trains In Corridor Window (<span id="train-count-badge">8</span>)
+            </h3>
+            <span class="text-[10px] text-slate-400 font-mono">Click train to inspect telemetry</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-[#0F172A] text-slate-400 font-mono text-[10px] uppercase border-y border-slate-800">
+                <tr>
+                  <th class="py-2.5 px-3">Train # & Name</th>
+                  <th class="py-2.5 px-3">Priority</th>
+                  <th class="py-2.5 px-3">Route</th>
+                  <th class="py-2.5 px-3">Sched Dep/Arr</th>
+                  <th class="py-2.5 px-3">Current Section</th>
+                  <th class="py-2.5 px-3">Delay</th>
+                </tr>
+              </thead>
+              <tbody id="train-table-body" class="divide-y divide-slate-800/70">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Telemetry Details Panel (5 cols) -->
+        <div class="lg:col-span-5" id="train-details-panel">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 4: REQUEST FORM ==================== -->
+    <div id="tab-request" class="tab-content hidden max-w-4xl mx-auto space-y-6">
+      <div class="bg-[#1E293B] p-6 rounded-2xl border border-slate-800 shadow-xl">
+        <div class="flex items-center space-x-2">
+          <h2 class="text-2xl font-black text-white">Maintenance Block Demand Request</h2>
+          <span class="bg-[#FF6B00]/20 text-[#FF6B00] border border-[#FF6B00]/40 text-xs px-2.5 py-0.5 rounded-full font-mono">
+            Section Engineer Portal
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">
+          Submit official corridor maintenance requisition for track, OHE, or signalling works. The AI optimizer will search non-disruptive windows automatically.
+        </p>
+      </div>
+
+      <!-- Success Toast -->
+      <div id="request-success-banner" class="hidden bg-emerald-950/90 border border-emerald-500 p-4 rounded-xl flex items-center space-x-3 text-emerald-300">
+        <span class="text-2xl">✅</span>
+        <div>
+          <div class="font-bold text-sm">Request Submitted Successfully!</div>
+          <div class="text-xs text-emerald-400/90">Corridor demand logged into central queue. Navigating to Automatic Block Planner...</div>
+        </div>
+      </div>
+
+      <form id="maintenance-form" onsubmit="handleFormSubmit(event)" class="bg-[#1E293B] border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-2">Corridor Section *</label>
+            <select id="req-section" class="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#FF6B00] font-mono cursor-pointer">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-2">Department *</label>
+            <select id="req-dept" onchange="updateWorkTypeOptions()" class="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#FF6B00] cursor-pointer">
+              <option value="Engineering">Civil Engineering (P-Way)</option>
+              <option value="Electrical">Electrical (Traction / OHE)</option>
+              <option value="Signal & Telecom">Signal & Telecom (S&T)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-2">Work Category *</label>
+            <select id="req-worktype" class="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#FF6B00] cursor-pointer">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-2">Safety Priority *</label>
+            <select id="req-priority" class="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#FF6B00] cursor-pointer">
+              <option value="Critical">Critical (Immediate safety risk / rail flaw)</option>
+              <option value="High" selected>High (Overdue maintenance cycle)</option>
+              <option value="Normal">Normal (Routine inspection / grinding)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-2">
+              Duration Required: <span id="duration-val-label" class="text-[#FF6B00]">180 min (3h)</span>
+            </label>
+            <input
+              type="range"
+              id="req-duration"
+              min="60"
+              max="360"
+              step="30"
+              value="180"
+              oninput="document.getElementById('duration-val-label').innerText = `${this.value} min (${this.value / 60}h)`"
+              class="w-full accent-[#FF6B00] cursor-pointer"
+            >
+          </div>
+
+          <div>
+            <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-2">Required Crew / Machine *</label>
+            <select id="req-team" class="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#FF6B00] cursor-pointer">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-2">Technical Justification / Asset Health Rationale *</label>
+          <textarea
+            id="req-reason"
+            rows="3"
+            class="w-full bg-[#0F172A] border border-slate-700 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#FF6B00]"
+            placeholder="Specify reason, OMS track recording car defect, rail temperature limit, or IMR weld defect..."
+          >Deep screening and sleeper renewal over km 710-713; rail fatigue threshold exceeded.</textarea>
+        </div>
+
+        <div class="flex justify-end pt-4 border-t border-slate-800">
+          <button type="submit" class="px-6 py-3 bg-gradient-to-r from-[#FF6B00] to-amber-500 hover:from-[#ff7b1a] text-white font-bold text-xs rounded-xl shadow-lg shadow-[#FF6B00]/25 transition cursor-pointer">
+            Submit & Auto-Plan Windows →
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ==================== TAB 5: AUTOMATIC PLANNER & TIMELINE ==================== -->
+    <div id="tab-planner" class="tab-content hidden space-y-8">
+      <!-- Header -->
+      <div class="bg-[#1E293B] p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="flex items-center space-x-2">
+            <h2 class="text-2xl font-black text-white">Automatic AI Block Planner</h2>
+            <span class="bg-violet-500/20 text-violet-400 border border-violet-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono">
+              Google OR-Tools CP-SAT Heuristics
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">
+            Evaluate maintenance demands against scheduled train occupancies to find minimal-disruption windows.
+          </p>
+        </div>
+
+        <button onclick="runOptimization()" id="btn-run-optimizer" class="px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-violet-600/25 transition flex items-center space-x-2 cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <span>Find Best Block Plan</span>
+        </button>
+      </div>
+
+      <!-- Config & Queue -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Request Queue (7 cols) -->
+        <div class="lg:col-span-7 bg-[#1E293B] border border-slate-800 rounded-2xl p-5 shadow-xl">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
+              Pending Maintenance Demands
+            </h3>
+            <span class="text-[10px] text-slate-400 font-mono">Select target to optimize</span>
+          </div>
+          <div id="planner-requests-queue" class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Optimizer Config (5 cols) -->
+        <div class="lg:col-span-5 bg-[#1E293B] border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+          <h3 class="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
+            Optimization Parameters
+          </h3>
+          <div class="space-y-3 text-xs">
+            <div>
+              <label class="block font-mono text-slate-400 uppercase text-[10px] mb-1">Target Planning Date</label>
+              <input type="date" value="2026-09-08" class="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+            </div>
+            <div>
+              <label class="block font-mono text-slate-400 uppercase text-[10px] mb-1">Lookahead Horizon</label>
+              <select class="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+                <option>Next 24 Hours (Standard Day Cycle)</option>
+                <option>Next 12 Hours (Urgent Shift)</option>
+                <option>Next 48 Hours (Weekend Megablock)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-mono text-slate-400 uppercase text-[10px] mb-1">Optimization Objective Function</label>
+              <div class="space-y-1.5">
+                <label class="flex items-center space-x-2 p-2 rounded-xl border border-violet-500/60 bg-violet-950/40 cursor-pointer">
+                  <input type="radio" name="optObj" value="Balanced" checked class="accent-violet-500">
+                  <div>
+                    <span class="font-bold text-white text-xs">Balanced Strategy</span>
+                    <span class="text-[10px] text-slate-400 block">Tradeoff train delay minutes against maintenance turnaround.</span>
+                  </div>
+                </label>
+                <label class="flex items-center space-x-2 p-2 rounded-xl border border-slate-800 bg-[#0F172A] cursor-pointer">
+                  <input type="radio" name="optObj" value="Minimum Delay" class="accent-violet-500">
+                  <div>
+                    <span class="font-bold text-white text-xs">Minimum Passenger Delay</span>
+                    <span class="text-[10px] text-slate-400 block">Strictly protect high-speed passenger paths at all costs.</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Candidate Plans Strip -->
+      <div id="candidate-plans-container" class="space-y-4">
+        <div class="flex justify-between items-center">
+          <div>
+            <h3 class="text-base font-bold text-white">AI-Ranked Alternative Block Windows</h3>
+            <p class="text-xs text-slate-400">Click a candidate to load it into the interactive timeline</p>
+          </div>
+          <span class="text-xs font-mono text-violet-400 bg-violet-500/10 px-3 py-1 rounded-full border border-violet-500/30">
+            CP-SAT Ranked
+          </span>
+        </div>
+        <div id="candidate-plans-cards" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Interactive Gantt Timeline Section -->
+      <div id="timeline-interactive-container" class="space-y-6">
+        <!-- Outcome Cards & Rationale -->
+        <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
+          <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 pb-4 border-b border-slate-800">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xl font-black font-mono text-white" id="plan-id-display">PLAN-7701</span>
+                <span class="text-xs bg-[#FF6B00]/20 text-[#FF6B00] border border-[#FF6B00]/40 px-2 py-0.5 rounded font-mono font-bold" id="plan-section-display">
+                  PRYJ-DDU
+                </span>
+                <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-semibold" id="plan-worktype-display">
+                  Track Renewal (PQRS Machine)
+                </span>
+              </div>
+              <div class="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-slate-400 font-mono">
+                <span>Proposed Window: <strong class="text-white" id="plan-window-display">11:30 – 14:30</strong> (<span id="plan-duration-display">180</span>m)</span>
+                <span>•</span>
+                <span>Team: <strong class="text-slate-200" id="plan-team-display">Gang-14</strong></span>
+              </div>
+            </div>
+
+            <!-- Quick Shift Controls -->
+            <div class="flex items-center space-x-2 w-full lg:w-auto">
+              <button onclick="shiftBlock(-30)" class="px-2.5 py-1.5 bg-[#0F172A] hover:bg-slate-800 text-slate-300 text-xs font-mono rounded-lg border border-slate-700 transition cursor-pointer">
+                ◀ -30m
+              </button>
+              <button onclick="shiftBlock(30)" class="px-2.5 py-1.5 bg-[#0F172A] hover:bg-slate-800 text-slate-300 text-xs font-mono rounded-lg border border-slate-700 transition cursor-pointer">
+                +30m ▶
+              </button>
+              <button onclick="submitPlanForApproval()" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center space-x-1.5 cursor-pointer ml-auto lg:ml-0">
+                <span>Submit for Approval</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Outcome Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-[#0F172A] p-4 rounded-xl border border-slate-800">
+              <span class="text-[10px] font-mono uppercase text-slate-400">Estimated Delay</span>
+              <div class="text-2xl font-black font-mono mt-0.5" id="metric-delay">24 min</div>
+              <div class="text-[11px] text-slate-400 mt-1">Weighted passenger & freight loss</div>
+            </div>
+
+            <div class="bg-[#0F172A] p-4 rounded-xl border border-slate-800">
+              <span class="text-[10px] font-mono uppercase text-slate-400">Priority Conflicts</span>
+              <div class="text-2xl font-black font-mono mt-0.5" id="metric-priority-conflicts">0 Trains</div>
+              <div class="text-[11px] text-slate-400 mt-1" id="metric-priority-sub">Rajdhani corridor clear</div>
+            </div>
+
+            <div class="bg-[#0F172A] p-4 rounded-xl border border-slate-800">
+              <span class="text-[10px] font-mono uppercase text-slate-400">Execution Risk</span>
+              <div class="text-2xl font-black font-mono mt-0.5" id="metric-risk">Low Risk</div>
+              <div class="text-[11px] text-slate-400 mt-1" id="metric-score">Score: 94 / 100</div>
+            </div>
+
+            <div id="verdict-banner" class="p-4 rounded-xl border bg-emerald-950/40 border-emerald-500/40 text-emerald-300">
+              <div class="font-bold text-xs uppercase font-mono" id="verdict-title">✓ Recommended Window</div>
+              <p class="text-[11px] mt-1.5 leading-snug" id="verdict-reason">
+                Optimal slot inside natural passenger lull; zero impact on Rajdhani or Vande Bharat.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- The Gantt Chart Canvas -->
+        <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div>
+              <h3 class="text-base font-bold text-white flex items-center space-x-2">
+                <span>Corridor Occupancy Gantt Chart</span>
+                <span class="text-[10px] font-mono bg-[#FF6B00]/20 text-[#FF6B00] px-2 py-0.5 rounded border border-[#FF6B00]/40">
+                  SLIDE / DRAG BLOCK TO TEST IMPACT
+                </span>
+              </h3>
+              <p class="text-xs text-slate-400">
+                Move the amber block slot horizontally. Instant collision detection recalculates delay and risk.
+              </p>
+            </div>
+
+            <!-- Legend -->
+            <div class="flex flex-wrap items-center gap-3 text-[11px] font-mono">
+              <span class="flex items-center space-x-1"><span class="w-3 h-2 bg-[#F59E0B] rounded-sm"></span><span>Block Slot</span></span>
+              <span class="flex items-center space-x-1"><span class="w-3 h-2 bg-[#EF4444] rounded-sm"></span><span>Conflict / Rajdhani</span></span>
+              <span class="flex items-center space-x-1"><span class="w-3 h-2 bg-[#3B82F6] rounded-sm"></span><span>Vande Bharat</span></span>
+              <span class="flex items-center space-x-1"><span class="w-3 h-2 bg-[#06B6D4] rounded-sm"></span><span>Mail / Express</span></span>
+              <span class="flex items-center space-x-1"><span class="w-3 h-2 bg-[#64748B] rounded-sm"></span><span>Freight</span></span>
+            </div>
+          </div>
+
+          <!-- Time Slider -->
+          <div class="bg-[#0F172A] p-3 rounded-xl border border-slate-800 flex items-center space-x-4">
+            <span class="text-xs font-mono text-slate-400 font-bold whitespace-nowrap">
+              Interactive Time Slider (00:00 - 24:00):
+            </span>
+            <input
+              type="range"
+              id="timeline-slider"
+              min="0"
+              max="1260"
+              step="15"
+              value="690"
+              oninput="handleTimelineSliderChange(Number(this.value))"
+              class="w-full accent-[#FF6B00] cursor-pointer"
+            >
+            <span id="slider-time-label" class="font-mono text-xs font-bold text-amber-400 bg-slate-800 px-2.5 py-1 rounded">
+              11:30
+            </span>
+          </div>
+
+          <!-- Gantt Grid Canvas -->
+          <div class="overflow-x-auto border border-slate-800 rounded-xl bg-[#0F172A]">
+            <div class="min-w-[960px] p-4">
+              <!-- Hours Header -->
+              <div id="gantt-hours-header" class="grid grid-cols-24 border-b border-slate-800 pb-2 text-[10px] font-mono text-slate-400 pl-36">
+                <!-- Populated by JS -->
+              </div>
+              <!-- Section Rows -->
+              <div id="gantt-rows" class="space-y-3 pt-3">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Collisions Box -->
+          <div id="gantt-conflicts-box" class="hidden bg-red-950/20 border border-red-500/30 rounded-xl p-4">
+            <h4 class="text-xs font-mono font-bold text-red-400 uppercase mb-2">
+              ⚠️ Trains Regulated in this Window (<span id="conflicts-count-badge">0</span>)
+            </h4>
+            <div id="conflicts-list-cards" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 6: WHAT-IF SIMULATION ==================== -->
+    <div id="tab-whatif" class="tab-content hidden space-y-8">
+      <!-- Header -->
+      <div class="bg-[#1E293B] p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="flex items-center space-x-2">
+            <h2 class="text-2xl font-black text-white">What-If Simulation & Dynamic Re-Planner</h2>
+            <span class="bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono">
+              Contingency Modeling
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">
+            Simulate operational disturbances (train delays, derailment precautions, emergency rail fractures) and evaluate plan robustness.
+          </p>
+        </div>
+
+        <button onclick="applyWhatIfScenario()" class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/25 transition cursor-pointer">
+          Apply This Scenario & Re-Evaluate
+        </button>
+      </div>
+
+      <!-- Scenarios Selector -->
+      <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        <h3 class="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
+          1. Select Scenario Parameters
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div onclick="selectWhatIfScenarioType('delay')" id="scen-card-delay" class="p-4 rounded-xl border border-[#FF6B00] bg-[#0F172A] cursor-pointer">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-sm text-white">Scenario A: Train Delay Cascade</span>
+              <span class="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">Lateness</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">
+              Simulate primary train getting delayed upstream (signal fault, fog, engine snag) pushing its section arrival into a planned block.
+            </p>
+          </div>
+
+          <div onclick="selectWhatIfScenarioType('emergency')" id="scen-card-emergency" class="p-4 rounded-xl border border-slate-800 bg-[#0F172A]/50 opacity-60 cursor-pointer">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-sm text-white">Scenario B: Emergency Track Fracture</span>
+              <span class="text-[10px] font-mono text-red-400 bg-red-500/10 px-2 py-0.5 rounded">Emergency Block</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">
+              Inject an urgent 90-minute rail fracture clamp block into a critical section, displacing scheduled train paths.
+            </p>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div id="whatif-delay-controls" class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#0F172A] p-4 rounded-xl border border-slate-800">
+          <div>
+            <label class="block text-xs font-mono text-slate-400 uppercase mb-1">Target Delayed Train</label>
+            <select id="whatif-train-select" class="w-full bg-[#1E293B] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono cursor-pointer">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-mono text-slate-400 uppercase mb-1">
+              Upstream Delay: <span id="whatif-delay-label" class="text-[#FF6B00] font-bold">+47 min</span>
+            </label>
+            <input
+              type="range"
+              id="whatif-delay-slider"
+              min="15"
+              max="120"
+              step="5"
+              value="47"
+              oninput="document.getElementById('whatif-delay-label').innerText = `+${this.value} min`"
+              class="w-full accent-[#FF6B00] cursor-pointer mt-2"
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparison Table -->
+      <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        <h3 class="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
+          2. Comparison: Baseline Plan vs Simulated Disturbance
+        </h3>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-[#0F172A] text-slate-400 uppercase font-mono text-[10px] border-y border-slate-800">
+              <tr>
+                <th class="py-3 px-4">Evaluation Metric</th>
+                <th class="py-3 px-4">Baseline Plan (PLAN-7701)</th>
+                <th class="py-3 px-4 text-amber-400">Simulated Scenario</th>
+                <th class="py-3 px-4">Variance / Delta</th>
+              </tr>
+            </thead>
+            <tbody id="whatif-comparison-body" class="divide-y divide-slate-800/80 font-mono">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Re-Plan Trigger Box -->
+      <div class="bg-gradient-to-r from-[#1E293B] via-slate-900 to-[#1E293B] border-2 border-red-500/40 rounded-2xl p-6 shadow-2xl">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="w-3 h-3 rounded-full bg-red-500 animate-ping"></span>
+              <h4 class="text-base font-bold text-white">Dynamic Re-Planning Trigger Detected</h4>
+              <span class="text-[10px] font-mono bg-red-500/20 text-red-400 px-2 py-0.5 rounded border border-red-500/40">CRITICAL WARNING</span>
+            </div>
+            <p class="text-xs text-slate-300 mt-1">
+              Train <strong class="text-white" id="trigger-train-num">12301</strong> delayed by <span id="trigger-delay-num">47</span> minutes creates a direct collision with block PLAN-7701 on section PRYJ–DDU.
+            </p>
+          </div>
+
+          <div class="flex space-x-3">
+            <button onclick="approveNewPlan()" class="px-5 py-2.5 bg-gradient-to-r from-[#22C55E] to-teal-600 hover:from-emerald-400 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">
+              ✓ Approve New Plan
+            </button>
+            <button onclick="switchTab('planner')" class="px-4 py-2.5 bg-[#0F172A] hover:bg-slate-800 text-slate-300 font-bold text-xs rounded-xl border border-slate-700 transition cursor-pointer">
+              ✎ Modify
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 7: APPROVAL & AUDIT ==================== -->
+    <div id="tab-audit" class="tab-content hidden space-y-8">
+      <div class="bg-[#1E293B] p-6 rounded-2xl border border-slate-800 shadow-xl">
+        <div class="flex items-center space-x-2">
+          <h2 class="text-2xl font-black text-white">Human-in-the-Loop Approval & Immutable Audit Trail</h2>
+          <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-0.5 rounded-full font-mono">
+            Safety Authorization
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">
+          Safety regulations mandate that only authorized railway operating officers (Traffic, Civil, Traction) can sanction track possessions.
+        </p>
+      </div>
+
+      <!-- Officer Sign-Off Card -->
+      <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-4 border-b border-slate-800">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="text-lg font-black font-mono text-white" id="audit-plan-id">PLAN-7701</span>
+              <span class="text-xs font-mono bg-[#FF6B00]/20 text-[#FF6B00] px-2 py-0.5 rounded border border-[#FF6B00]/40">
+                PRYJ-DDU
+              </span>
+              <span class="text-xs px-2 py-0.5 rounded font-mono font-bold bg-amber-500/20 text-amber-300" id="audit-plan-status">
+                Status: Proposed
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">Track Renewal (PQRS Machine) • Crew: Gang-14</p>
+          </div>
+
+          <div class="text-xs font-mono text-slate-300 bg-[#0F172A] px-3 py-1.5 rounded-xl border border-slate-700">
+            Window: <strong class="text-white">11:30 – 14:30</strong> (180 min)
+          </div>
+        </div>
+
+        <div class="bg-[#0F172A] p-5 rounded-xl border border-slate-800 space-y-4">
+          <h4 class="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
+            Authorizing Officer Sign-Off
+          </h4>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-mono text-slate-400 uppercase mb-1">Designated Officer Role *</label>
+              <select id="audit-officer-role" class="w-full bg-[#1E293B] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FF6B00] cursor-pointer">
+                <option>Chief Controller (Traffic) — Operating Dept</option>
+                <option>Sr. DEN (Co-ord) — Civil P-Way</option>
+                <option>TPC (Traction Power Controller) — Electrical</option>
+                <option>Divisional Safety Officer (DSO)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-mono text-slate-400 uppercase mb-1">Operational Remarks (Optional)</label>
+              <input
+                type="text"
+                id="audit-officer-remarks"
+                placeholder="e.g. Sanctioned subject to caution order 30 km/h at Km 712."
+                class="w-full bg-[#1E293B] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#FF6B00]"
+              >
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+            <button onclick="handleAuditAction('Reject')" class="px-5 py-2.5 bg-red-950 hover:bg-red-900 text-red-300 border border-red-800/60 font-bold text-xs rounded-xl transition cursor-pointer">
+              ✕ Reject Block Request
+            </button>
+            <button onclick="handleAuditAction('Modify')" class="px-5 py-2.5 bg-amber-950 hover:bg-amber-900 text-amber-300 border border-amber-800/60 font-bold text-xs rounded-xl transition cursor-pointer">
+              ✎ Request Modification
+            </button>
+            <button onclick="handleAuditAction('Approve')" class="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/20 transition cursor-pointer">
+              ✓ Authorize & Approve Block
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit Table -->
+      <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        <div class="flex justify-between items-center">
+          <div>
+            <h3 class="text-base font-bold text-white">Central Operations Audit Log</h3>
+            <p class="text-xs text-slate-400">Timestamped record of all AI plan generations, controller approvals, and scenario simulations.</p>
+          </div>
+          <span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/30">
+            Immutable Record
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-[#0F172A] text-slate-400 uppercase font-mono text-[10px] border-y border-slate-800">
+              <tr>
+                <th class="py-2.5 px-3">Timestamp (IST)</th>
+                <th class="py-2.5 px-3">Authorized Role</th>
+                <th class="py-2.5 px-3">Action</th>
+                <th class="py-2.5 px-3">Summary & Remarks</th>
+              </tr>
+            </thead>
+            <tbody id="audit-logs-table-body" class="divide-y divide-slate-800/80 font-mono text-xs">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 8: ARCHITECTURE & FUTURE SCOPE ==================== -->
+    <div id="tab-architecture" class="tab-content hidden space-y-12 pb-12">
+      <div class="bg-[#1E293B] p-6 rounded-2xl border border-slate-800 shadow-xl">
+        <div class="flex items-center space-x-2">
+          <h2 class="text-2xl font-black text-white">Technical Architecture & Engineering Design</h2>
+          <span class="bg-[#FF6B00]/20 text-[#FF6B00] border border-[#FF6B00]/40 text-xs px-2.5 py-0.5 rounded-full font-mono">
+            System Blueprints
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">
+          Designed for high-throughput constraint optimization, modular API integration with Indian Railways enterprise IT, and fail-safe human control.
+        </p>
+      </div>
+
+      <!-- Pillars -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-5 space-y-2">
+          <div class="text-2xl text-sky-400 font-mono">⚛️ Frontend</div>
+          <h4 class="text-sm font-bold text-white">React 18 + Tailwind CSS</h4>
+          <p class="text-xs text-slate-300">Interactive command center with drag-and-drop Gantt timeline and zero-latency collision detection.</p>
+          <span class="inline-block text-[10px] font-mono text-slate-400 bg-[#0F172A] px-2 py-0.5 rounded">TypeScript 5.x</span>
+        </div>
+
+        <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-5 space-y-2">
+          <div class="text-2xl text-emerald-400 font-mono">⚡ Backend API</div>
+          <h4 class="text-sm font-bold text-white">FastAPI (Python 3.13)</h4>
+          <p class="text-xs text-slate-300">Asynchronous microservice orchestrating data feeds from timetable schedules and dispatching optimization jobs.</p>
+          <span class="inline-block text-[10px] font-mono text-slate-400 bg-[#0F172A] px-2 py-0.5 rounded">Async Pydantic V2</span>
+        </div>
+
+        <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-5 space-y-2">
+          <div class="text-2xl text-violet-400 font-mono">🧠 Optimizer Engine</div>
+          <h4 class="text-sm font-bold text-white">Google OR-Tools CP-SAT</h4>
+          <p class="text-xs text-slate-300">Constraint Programming solver enforcing safety headway intervals (15m buffer) and delay penalty minimization.</p>
+          <span class="inline-block text-[10px] font-mono text-slate-400 bg-[#0F172A] px-2 py-0.5 rounded">Constraint Satisfaction</span>
+        </div>
+
+        <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-5 space-y-2">
+          <div class="text-2xl text-amber-400 font-mono">📊 Data Pipeline</div>
+          <h4 class="text-sm font-bold text-white">Synthetic Corridor Data</h4>
+          <p class="text-xs text-slate-300">Simulated NDLS–HWH Golden Corridor topology, real-world train classifications (Rajdhani, Vande Bharat), and maintenance tasks.</p>
+          <span class="inline-block text-[10px] font-mono text-slate-400 bg-[#0F172A] px-2 py-0.5 rounded">100% Synthetic Demo</span>
+        </div>
+      </div>
+
+      <!-- Pipeline Flow -->
+      <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
+        <div class="flex justify-between items-center pb-4 border-b border-slate-800">
+          <div>
+            <h3 class="text-base font-bold text-white">Inter-Process Architecture Diagram</h3>
+            <p class="text-xs text-slate-400">Data journey from field demand to controller-approved railway possession</p>
+          </div>
+          <span class="text-[10px] font-mono text-slate-400 bg-[#0F172A] px-2 py-1 rounded border border-slate-700">
+            Frontend ↔ API ↔ CP-SAT Optimizer ↔ Mock Data
+          </span>
+        </div>
+
+        <div class="bg-[#0F172A] rounded-xl p-6 border border-slate-800">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+            <div class="bg-[#1E293B] border border-blue-500/40 rounded-xl p-4">
+              <div class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-sm mx-auto mb-2">1</div>
+              <h5 class="font-bold text-white text-xs">Command Web UI</h5>
+              <p class="text-[10px] text-slate-400 mt-1">Interactive Gantt & Timetables</p>
+            </div>
+            <div class="bg-[#1E293B] border border-amber-500/40 rounded-xl p-4">
+              <div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm mx-auto mb-2">2</div>
+              <h5 class="font-bold text-white text-xs">FastAPI Gateway</h5>
+              <p class="text-[10px] text-slate-400 mt-1">REST API & Schema Validation</p>
+            </div>
+            <div class="bg-[#1E293B] border border-violet-500/40 rounded-xl p-4">
+              <div class="w-8 h-8 rounded-full bg-violet-500/20 text-violet-400 flex items-center justify-center font-bold text-sm mx-auto mb-2">3</div>
+              <h5 class="font-bold text-white text-xs">OR-Tools CP-SAT</h5>
+              <p class="text-[10px] text-slate-400 mt-1">Headway & Penalty Optimization</p>
+            </div>
+            <div class="bg-[#1E293B] border border-emerald-500/40 rounded-xl p-4">
+              <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm mx-auto mb-2">4</div>
+              <h5 class="font-bold text-white text-xs">Corridor Repository</h5>
+              <p class="text-[10px] text-slate-400 mt-1">Synthetic Train & Section Data</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-[#0F172A] border-l-4 border-violet-500 p-4 rounded-r-xl">
+          <h4 class="text-xs font-mono font-bold text-violet-400 uppercase">
+            OR-Tools CP-SAT Formulation Details
+          </h4>
+          <p class="text-xs text-slate-300 mt-1 leading-relaxed font-mono">
+            Minimize: ∑ (w_priority × Delay_Minutes) + (w_urgency × Deferred_Days)<br>
+            Subject to: NoOverlap([Block_Interval, Train_Passage_Interval + Safety_Buffer_15min])
+          </p>
+        </div>
+      </div>
+
+      <!-- Future Roadmap -->
+      <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
+        <div>
+          <h3 class="text-xs font-mono font-bold tracking-widest text-[#FF6B00] uppercase mb-1">Production Vision</h3>
+          <h4 class="text-xl font-bold text-white">Roadmap & Future Integration</h4>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+          <div class="bg-[#0F172A] p-5 rounded-xl border border-slate-800 space-y-2">
+            <h5 class="font-bold text-white text-sm text-[#FF6B00]">01. Live CRIS / FOIS / COA Integration</h5>
+            <p class="text-slate-300 leading-relaxed">Direct API connectivity with CRIS (Centre for Railway Information Systems) and ICMS for real-time timetable synchronization.</p>
+          </div>
+          <div class="bg-[#0F172A] p-5 rounded-xl border border-slate-800 space-y-2">
+            <h5 class="font-bold text-white text-sm text-[#FF6B00]">02. ISRO RTIS Locomotive GPS</h5>
+            <p class="text-slate-300 leading-relaxed">Continuous stream of RTIS GPS coordinates installed on Indian Railway locos for real-time headway recalculation.</p>
+          </div>
+          <div class="bg-[#0F172A] p-5 rounded-xl border border-slate-800 space-y-2">
+            <h5 class="font-bold text-white text-sm text-[#FF6B00]">03. Predictive Track & OHE Health Sensors</h5>
+            <p class="text-slate-300 leading-relaxed">Integration with Track Recording Cars (OMS-2000), ultrasonic flaw detectors (USFD), and thermal cameras for condition-based maintenance triggers.</p>
+          </div>
+          <div class="bg-[#0F172A] p-5 rounded-xl border border-slate-800 space-y-2">
+            <h5 class="font-bold text-white text-sm text-[#FF6B00]">04. Mobile App for Gang Mates & Drivers</h5>
+            <p class="text-slate-300 leading-relaxed">Field app for work gangs to acknowledge line possession clearances and report completion with geotagged photo proof.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-[#0A0F1D] border-t border-slate-800 text-slate-400 py-8 px-4 sm:px-6 lg:px-8 mt-auto">
+    <div class="max-w-7xl mx-auto space-y-4">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-mono font-black text-white text-base">RAIL<span class="text-[#FF6B00]">SETU</span></span>
+            <span class="text-[10px] font-mono bg-slate-800 text-slate-300 px-2 py-0.5 rounded">Prototype v1.0</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">“Bridging Maintenance and Movement — Intelligently.”</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-4 text-xs font-mono">
+          <a href="https://github.com/railsetu/railsetu-prototype" target="_blank" class="text-slate-300 hover:text-[#FF6B00]">GitHub Repo ↗</a>
+          <span class="text-slate-600">•</span>
+          <span class="text-slate-300">Team: <strong class="text-white">SetuAI Innovators</strong></span>
+          <span class="text-slate-600">•</span>
+          <a href="mailto:contact@railsetu.internal" class="text-slate-300 hover:text-[#FF6B00]">contact@railsetu.internal</a>
+        </div>
+      </div>
+      <div class="pt-4 border-t border-slate-800/60 flex flex-col sm:flex-row justify-between items-center text-[11px] text-slate-400 gap-2">
+        <p>⚠️ <strong class="text-slate-300">RAILSETU – Hackathon Prototype.</strong> All data is synthetic. Not connected to real Indian Railways systems.</p>
+        <div class="font-mono text-[10px]">Command Center Theme #0F172A • Accent #FF6B00</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Application Logic & Interactive State Store -->
+  <script>
+    // ==================== DATA STORE ====================
+    const CORRIDOR_SECTIONS = [
+      { id: 'NDLS-CNB', name: 'New Delhi – Kanpur Central', lengthKm: 440, tracks: 'Double', status: 'Block Planned', maxSpeedKmH: 130, division: 'Delhi / Prayagraj' },
+      { id: 'CNB-PRYJ', name: 'Kanpur Central – Prayagraj Jn', lengthKm: 194, tracks: 'Double', status: 'Available', maxSpeedKmH: 130, division: 'Prayagraj' },
+      { id: 'PRYJ-DDU', name: 'Prayagraj Jn – Pt. Deen Dayal Upadhyaya', lengthKm: 153, tracks: 'Double', status: 'Conflict', maxSpeedKmH: 130, division: 'Pt. Deen Dayal Upadhyaya' },
+      { id: 'DDU-GAYA', name: 'Pt. Deen Dayal Upadhyaya – Gaya Jn', lengthKm: 205, tracks: 'Double', status: 'Available', maxSpeedKmH: 130, division: 'DDU / Danapur' },
+      { id: 'GAYA-DHN', name: 'Gaya Jn – Dhanbad Jn (Grand Chord)', lengthKm: 201, tracks: 'Double', status: 'Block Planned', maxSpeedKmH: 130, division: 'Dhanbad' },
+      { id: 'DHN-ASN', name: 'Dhanbad Jn – Asansol Jn', lengthKm: 58, tracks: 'Double', status: 'Available', maxSpeedKmH: 110, division: 'Asansol' },
+      { id: 'ASN-HWH', name: 'Asansol Jn – Howrah Jn', lengthKm: 200, tracks: 'Quad', status: 'Available', maxSpeedKmH: 130, division: 'Howrah' }
+    ];
+
+    let SAMPLE_TRAINS = [
+      {
+        id: 't-12301',
+        number: '12301',
+        name: 'Howrah Rajdhani Express',
+        type: 'Rajdhani',
+        priority: 'Super-Priority',
+        origin: 'HWH (Howrah)',
+        destination: 'NDLS (New Delhi)',
+        scheduledDeparture: '16:50',
+        scheduledArrival: '10:05',
+        currentSection: 'CNB-PRYJ',
+        delayMinutes: 12,
+        nextStation: 'Kanpur Central (CNB)',
+        nextStationETA: '04:52',
+        direction: 'UP',
+        stops: [
+          { stationName: 'Howrah Jn', arr: '16:50', dep: '16:50' },
+          { stationName: 'Asansol Jn', arr: '18:57', dep: '19:00' },
+          { stationName: 'Dhanbad Jn', arr: '19:55', dep: '20:00' },
+          { stationName: 'Gaya Jn', arr: '22:19', dep: '22:22' },
+          { stationName: 'Pt. Deen Dayal Upadhyaya', arr: '00:45', dep: '00:55' },
+          { stationName: 'Prayagraj Jn', arr: '02:33', dep: '02:35' },
+          { stationName: 'Kanpur Central', arr: '04:40', dep: '04:45' },
+          { stationName: 'New Delhi', arr: '10:05', dep: '10:05' }
+        ],
+        sectionOccupancies: [
+          { sectionId: 'ASN-HWH', entryMinute: 1010, exitMinute: 1137 },
+          { sectionId: 'DHN-ASN', entryMinute: 1140, exitMinute: 1195 },
+          { sectionId: 'GAYA-DHN', entryMinute: 1200, exitMinute: 1339 },
+          { sectionId: 'PRYJ-DDU', entryMinute: 55, exitMinute: 153 },
+          { sectionId: 'CNB-PRYJ', entryMinute: 155, exitMinute: 280 },
+          { sectionId: 'NDLS-CNB', entryMinute: 285, exitMinute: 605 }
+        ]
+      },
+      {
+        id: 't-22436',
+        number: '22436',
+        name: 'Vande Bharat Express',
+        type: 'Vande Bharat',
+        priority: 'High',
+        origin: 'NDLS (New Delhi)',
+        destination: 'BSB (Varanasi)',
+        scheduledDeparture: '06:00',
+        scheduledArrival: '14:00',
+        currentSection: 'NDLS-CNB',
+        delayMinutes: 0,
+        nextStation: 'Kanpur Central (CNB)',
+        nextStationETA: '10:08',
+        direction: 'DOWN',
+        stops: [
+          { stationName: 'New Delhi', arr: '06:00', dep: '06:00' },
+          { stationName: 'Kanpur Central', arr: '10:08', dep: '10:10' },
+          { stationName: 'Prayagraj Jn', arr: '12:08', dep: '12:10' },
+          { stationName: 'Varanasi Jn', arr: '14:00', dep: '14:00' }
+        ],
+        sectionOccupancies: [
+          { sectionId: 'NDLS-CNB', entryMinute: 360, exitMinute: 608 },
+          { sectionId: 'CNB-PRYJ', entryMinute: 610, exitMinute: 728 },
+          { sectionId: 'PRYJ-DDU', entryMinute: 730, exitMinute: 830 }
+        ]
+      },
+      {
+        id: 't-12302',
+        number: '12302',
+        name: 'New Delhi – Howrah Rajdhani',
+        type: 'Rajdhani',
+        priority: 'Super-Priority',
+        origin: 'NDLS (New Delhi)',
+        destination: 'HWH (Howrah)',
+        scheduledDeparture: '16:55',
+        scheduledArrival: '09:55',
+        currentSection: 'NDLS-CNB',
+        delayMinutes: 5,
+        nextStation: 'Kanpur Central (CNB)',
+        nextStationETA: '21:35',
+        direction: 'DOWN',
+        stops: [
+          { stationName: 'New Delhi', arr: '16:55', dep: '16:55' },
+          { stationName: 'Kanpur Central', arr: '21:30', dep: '21:35' },
+          { stationName: 'Prayagraj Jn', arr: '23:35', dep: '23:37' },
+          { stationName: 'Pt. Deen Dayal Upadhyaya', arr: '01:37', dep: '01:47' },
+          { stationName: 'Gaya Jn', arr: '03:55', dep: '03:58' },
+          { stationName: 'Dhanbad Jn', arr: '06:18', dep: '06:23' },
+          { stationName: 'Asansol Jn', arr: '07:11', dep: '07:13' },
+          { stationName: 'Howrah Jn', arr: '09:55', dep: '09:55' }
+        ],
+        sectionOccupancies: [
+          { sectionId: 'NDLS-CNB', entryMinute: 1015, exitMinute: 1290 },
+          { sectionId: 'CNB-PRYJ', entryMinute: 1295, exitMinute: 1415 },
+          { sectionId: 'PRYJ-DDU', entryMinute: 1417, exitMinute: 1440 },
+          { sectionId: 'GAYA-DHN', entryMinute: 238, exitMinute: 378 },
+          { sectionId: 'DHN-ASN', entryMinute: 383, exitMinute: 431 },
+          { sectionId: 'ASN-HWH', entryMinute: 433, exitMinute: 595 }
+        ]
+      },
+      {
+        id: 't-12273',
+        number: '12273',
+        name: 'Howrah Duronto Express',
+        type: 'Duronto',
+        priority: 'High',
+        origin: 'HWH (Howrah)',
+        destination: 'NDLS (New Delhi)',
+        scheduledDeparture: '08:35',
+        scheduledArrival: '06:25',
+        currentSection: 'GAYA-DHN',
+        delayMinutes: 18,
+        nextStation: 'Gaya Jn (GAYA)',
+        nextStationETA: '14:20',
+        direction: 'UP',
+        stops: [
+          { stationName: 'Howrah Jn', arr: '08:35', dep: '08:35' },
+          { stationName: 'Asansol Jn', arr: '10:55', dep: '11:00' },
+          { stationName: 'Dhanbad Jn', arr: '12:00', dep: '12:05' },
+          { stationName: 'Gaya Jn', arr: '14:02', dep: '14:07' },
+          { stationName: 'Pt. Deen Dayal Upadhyaya', arr: '16:30', dep: '16:40' },
+          { stationName: 'Kanpur Central', arr: '21:10', dep: '21:15' },
+          { stationName: 'New Delhi', arr: '06:25', dep: '06:25' }
+        ],
+        sectionOccupancies: [
+          { sectionId: 'ASN-HWH', entryMinute: 515, exitMinute: 655 },
+          { sectionId: 'DHN-ASN', entryMinute: 660, exitMinute: 720 },
+          { sectionId: 'GAYA-DHN', entryMinute: 725, exitMinute: 842 },
+          { sectionId: 'PRYJ-DDU', entryMinute: 1000, exitMinute: 1140 },
+          { sectionId: 'CNB-PRYJ', entryMinute: 1140, exitMinute: 1270 },
+          { sectionId: 'NDLS-CNB', entryMinute: 1275, exitMinute: 1440 }
+        ]
+      },
+      {
+        id: 't-12311',
+        number: '12311',
+        name: 'Netaji Express',
+        type: 'Mail/Express',
+        priority: 'Normal',
+        origin: 'HWH (Howrah)',
+        destination: 'KLK (Kalka)',
+        scheduledDeparture: '21:55',
+        scheduledArrival: '03:00',
+        currentSection: 'PRYJ-DDU',
+        delayMinutes: 35,
+        nextStation: 'Prayagraj Jn (PRYJ)',
+        nextStationETA: '10:45',
+        direction: 'UP',
+        stops: [
+          { stationName: 'Howrah Jn', arr: '21:55', dep: '21:55' },
+          { stationName: 'Dhanbad Jn', arr: '02:15', dep: '02:20' },
+          { stationName: 'Pt. Deen Dayal Upadhyaya', arr: '08:05', dep: '08:15' },
+          { stationName: 'Prayagraj Jn', arr: '10:10', dep: '10:20' },
+          { stationName: 'Kanpur Central', arr: '13:30', dep: '13:40' },
+          { stationName: 'Delhi Jn', arr: '20:55', dep: '21:10' }
+        ],
+        sectionOccupancies: [
+          { sectionId: 'ASN-HWH', entryMinute: 1315, exitMinute: 1440 },
+          { sectionId: 'GAYA-DHN', entryMinute: 140, exitMinute: 305 },
+          { sectionId: 'PRYJ-DDU', entryMinute: 495, exitMinute: 610 },
+          { sectionId: 'CNB-PRYJ', entryMinute: 620, exitMinute: 810 },
+          { sectionId: 'NDLS-CNB', entryMinute: 820, exitMinute: 1255 }
+        ]
+      },
+      {
+        id: 't-12801',
+        number: '12801',
+        name: 'Purushottam Express',
+        type: 'Mail/Express',
+        priority: 'Normal',
+        origin: 'PURI (Puri)',
+        destination: 'NDLS (New Delhi)',
+        scheduledDeparture: '21:55',
+        scheduledArrival: '04:00',
+        currentSection: 'DHN-ASN',
+        delayMinutes: 8,
+        nextStation: 'Dhanbad Jn (DHN)',
+        nextStationETA: '10:50',
+        direction: 'UP',
+        stops: [
+          { stationName: 'Asansol Jn', arr: '09:40', dep: '09:45' },
+          { stationName: 'Dhanbad Jn', arr: '10:45', dep: '10:50' },
+          { stationName: 'Gaya Jn', arr: '13:40', dep: '13:45' },
+          { stationName: 'Pt. Deen Dayal Upadhyaya', arr: '16:50', dep: '17:00' },
+          { stationName: 'Kanpur Central', arr: '21:55', dep: '22:00' },
+          { stationName: 'New Delhi', arr: '04:00', dep: '04:00' }
+        ],
+        sectionOccupancies: [
+          { sectionId: 'ASN-HWH', entryMinute: 450, exitMinute: 580 },
+          { sectionId: 'DHN-ASN', entryMinute: 585, exitMinute: 645 },
+          { sectionId: 'GAYA-DHN', entryMinute: 650, exitMinute: 820 },
+          { sectionId: 'PRYJ-DDU', entryMinute: 1020, exitMinute: 1160 },
+          { sectionId: 'CNB-PRYJ', entryMinute: 1170, exitMinute: 1315 },
+          { sectionId: 'NDLS-CNB', entryMinute: 1320, exitMinute: 1440 }
+        ]
+      },
+      {
+        id: 't-boxn8812',
+        number: 'BOXN-8812',
+        name: 'Coal Freight (Dhanbad-Dadri)',
+        type: 'Freight',
+        priority: 'Freight',
+        origin: 'DHN (Dhanbad)',
+        destination: 'DER (Dadri Powerhouse)',
+        scheduledDeparture: '02:00',
+        scheduledArrival: '23:00',
+        currentSection: 'DDU-GAYA',
+        delayMinutes: 45,
+        nextStation: 'Pt. Deen Dayal Upadhyaya (DDU)',
+        nextStationETA: '11:15',
+        direction: 'UP',
+        stops: [
+          { stationName: 'Dhanbad Goods', arr: '02:00', dep: '02:00' },
+          { stationName: 'DDU Yard', arr: '10:30', dep: '11:30' },
+          { stationName: 'Dadri DFC', arr: '23:00', dep: '23:00' }
+        ],
+        sectionOccupancies: [
+          { sectionId: 'GAYA-DHN', entryMinute: 120, exitMinute: 360 },
+          { sectionId: 'PRYJ-DDU', entryMinute: 690, exitMinute: 900 },
+          { sectionId: 'CNB-PRYJ', entryMinute: 930, exitMinute: 1110 },
+          { sectionId: 'NDLS-CNB', entryMinute: 1140, exitMinute: 1380 }
+        ]
+      },
+      {
+        id: 't-bcn4402',
+        number: 'BCN-4402',
+        name: 'Fertilizer & Grain Freight',
+        type: 'Freight',
+        priority: 'Freight',
+        origin: 'CNB (Kanpur)',
+        destination: 'ASN (Asansol)',
+        scheduledDeparture: '04:30',
+        scheduledArrival: '22:00',
+        currentSection: 'CNB-PRYJ',
+        delayMinutes: 20,
+        nextStation: 'Prayagraj Chheoki (PCOI)',
+        nextStationETA: '11:30',
+        direction: 'DOWN',
+        stops: [
+          { stationName: 'Kanpur Goods', arr: '04:30', dep: '04:30' },
+          { stationName: 'DDU Goods', arr: '12:00', dep: '13:00' },
+          { stationName: 'Asansol Goods', arr: '22:00', dep: '22:00' }
+        ],
+        sectionOccupancies: [
+          { sectionId: 'CNB-PRYJ', entryMinute: 270, exitMinute: 480 },
+          { sectionId: 'PRYJ-DDU', entryMinute: 510, exitMinute: 720 },
+          { sectionId: 'GAYA-DHN', entryMinute: 990, exitMinute: 1180 },
+          { sectionId: 'DHN-ASN', entryMinute: 1180, exitMinute: 1320 }
+        ]
+      }
+    ];
+
+    let MAINTENANCE_REQUESTS = [
+      {
+        id: 'REQ-2026-081',
+        sectionId: 'PRYJ-DDU',
+        workType: 'Track Renewal (PQRS Machine)',
+        department: 'Engineering',
+        priority: 'Critical',
+        minDurationMinutes: 180,
+        requiredTeam: 'Gang-14 (Heavy Track Mechanized Rake)',
+        reason: 'Deep screening and sleeper renewal over km 710-713; rail fatigue threshold exceeded.',
+        status: 'Planned'
+      },
+      {
+        id: 'REQ-2026-082',
+        sectionId: 'NDLS-CNB',
+        workType: 'OHE Catenary Inspection & Dropper Replacement',
+        department: 'Electrical',
+        priority: 'High',
+        minDurationMinutes: 120,
+        requiredTeam: 'OHE Tower Wagon Team Alpha',
+        reason: 'Routine 25kV traction line inspection and thermal hotspot clearance near Aligarh.',
+        status: 'Planned'
+      },
+      {
+        id: 'REQ-2026-083',
+        sectionId: 'GAYA-DHN',
+        workType: 'Electronic Interlocking & Point Machine Overhaul',
+        department: 'Signal & Telecom',
+        priority: 'High',
+        minDurationMinutes: 150,
+        requiredTeam: 'S&T Signal Gang 03',
+        reason: 'Dual detection digital axle counter retrofitting at Koderma turnout.',
+        status: 'Pending'
+      },
+      {
+        id: 'REQ-2026-084',
+        sectionId: 'CNB-PRYJ',
+        workType: 'Rail Grinding Train (RGT) Operation',
+        department: 'Engineering',
+        priority: 'Normal',
+        minDurationMinutes: 240,
+        requiredTeam: 'RGT Specialist Crew 02',
+        reason: 'Profile rectification to eliminate rolling contact fatigue and head checks on UP line.',
+        status: 'Pending'
+      }
+    ];
+
+    let ACTIVE_PLAN = {
+      id: 'PLAN-7701',
+      requestId: 'REQ-2026-081',
+      sectionId: 'PRYJ-DDU',
+      workType: 'Track Renewal (PQRS Machine)',
+      startMinute: 690, // 11:30
+      durationMinutes: 180,
+      team: 'Gang-14 (Heavy Track Mechanized Rake)',
+      status: 'Proposed'
+    };
+
+    let CANDIDATE_PLANS = [];
+
+    let AUDIT_LOGS = [
+      { id: 'AUDIT-001', timestamp: '2026-09-08 07:15:20', userRole: 'Chief Controller (Traffic)', action: 'Approve', summary: 'Sanctioned 180m track renewal block PLAN-7701 on PRYJ-DDU. Freight regulation authorized.' },
+      { id: 'AUDIT-002', timestamp: '2026-09-08 08:30:11', userRole: 'TPC (Traction Power)', action: 'Submit Request', summary: 'Logged OHE Catenary Inspection request REQ-2026-082 for NDLS-CNB section.' },
+      { id: 'AUDIT-003', timestamp: '2026-09-08 09:05:44', userRole: 'AI System', action: 'Auto-Replan', summary: 'Generated CP-SAT candidate windows for REQ-2026-082. Identified optimal afternoon lull (14:00-16:00).' }
+    ];
+
+    // ==================== HELPER FUNCTIONS ====================
+    function minutesToTime(minutes) {
+      const norm = ((minutes % 1440) + 1440) % 1440;
+      const h = Math.floor(norm / 60);
+      const m = norm % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
+    // Evaluate collision and delays for given slot
+    function evaluateSlot(sectionId, startMinute, durationMinutes, trainList = SAMPLE_TRAINS) {
+      const endMinute = startMinute + durationMinutes;
+      const safetyBuffer = 15;
+      const windowStart = Math.max(0, startMinute - safetyBuffer);
+      const windowEnd = startMinute + durationMinutes + safetyBuffer;
+
+      const conflictingTrains = [];
+      let superPriorityCount = 0;
+      let highPriorityCount = 0;
+      let normalPriorityCount = 0;
+      let freightCount = 0;
+
+      for (const t of trainList) {
+        const occ = t.sectionOccupancies.find(o => o.sectionId === sectionId);
+        if (!occ) continue;
+
+        const overlap = Math.max(0, Math.min(windowEnd, occ.exitMinute) - Math.max(windowStart, occ.entryMinute));
+        if (overlap > 0) {
+          conflictingTrains.push(t);
+          if (t.priority === 'Super-Priority') superPriorityCount++;
+          else if (t.priority === 'High') highPriorityCount++;
+          else if (t.priority === 'Normal') normalPriorityCount++;
+          else if (t.priority === 'Freight') freightCount++;
+        }
+      }
+
+      const delayMinutes = (superPriorityCount * 45) + (highPriorityCount * 25) + (normalPriorityCount * 15) + (freightCount * 10);
+      
+      let riskLevel = 'Low';
+      if (superPriorityCount > 0 || conflictingTrains.length >= 3) riskLevel = 'High';
+      else if (highPriorityCount > 0 || conflictingTrains.length >= 2) riskLevel = 'Medium';
+
+      let score = 100 - (superPriorityCount * 55) - (highPriorityCount * 25) - (normalPriorityCount * 12) - (freightCount * 5) - Math.floor(delayMinutes / 6);
+      score = Math.max(5, Math.min(99, score));
+
+      const isRecommended = superPriorityCount === 0 && highPriorityCount === 0 && conflictingTrains.length <= 2;
+
+      let reason = '';
+      if (superPriorityCount > 0) {
+        reason = `Direct conflict with Super-Priority ${conflictingTrains.filter(t => t.priority === 'Super-Priority').map(t => t.number).join(', ')}. Strict safety rule prohibits block.`;
+      } else if (highPriorityCount > 0) {
+        reason = `Caution: Overlaps High-Priority train (${conflictingTrains.map(t => t.number).join(', ')}). Expect +${delayMinutes}m cascade regulation delay.`;
+      } else if (conflictingTrains.length > 0) {
+        reason = `Feasible window: Regulates ${freightCount} freight / ${normalPriorityCount} mail train(s). Total estimated corridor delay: ${delayMinutes} min.`;
+      } else {
+        reason = `Optimal natural traffic lull: Zero train conflicts detected within 15m safety margins. Highly recommended.`;
+      }
+
+      return {
+        startMinute,
+        endMinute,
+        conflictingTrains,
+        conflictCount: conflictingTrains.length,
+        superPriorityCount,
+        highPriorityCount,
+        delayMinutes,
+        riskLevel,
+        score,
+        isRecommended,
+        reason
+      };
+    }
+
+    // ==================== TAB NAVIGATION ====================
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      const target = document.getElementById(`tab-${tabId}`);
+      if (target) target.classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('text-[#FF6B00]', 'bg-[#1E293B]', 'border-[#FF6B00]/40');
+        btn.classList.add('text-slate-300');
+      });
+      const activeNav = document.getElementById(`nav-${tabId}`);
+      if (activeNav) {
+        activeNav.classList.remove('text-slate-300');
+        activeNav.classList.add('text-[#FF6B00]', 'bg-[#1E293B]', 'border-[#FF6B00]/40');
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Tab specific re-renders
+      if (tabId === 'dashboard') renderDashboard();
+      if (tabId === 'tracker') { renderTrainTable(); renderSelectedTrainTelemetry(SAMPLE_TRAINS[0]); }
+      if (tabId === 'planner') { renderPlannerQueue(); renderGantt(); }
+      if (tabId === 'whatif') renderWhatIf();
+      if (tabId === 'audit') renderAudit();
+    }
+
+    function scrollToHowItWorks() {
+      const el = document.getElementById('how-it-works');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function filterSectionConflict() {
+      switchTab('tracker');
+      const select = document.getElementById('section-filter-select');
+      if (select) {
+        select.value = 'PRYJ-DDU';
+        renderTrainTable();
+      }
+    }
+
+    // ==================== RENDER: DASHBOARD ====================
+    function renderDashboard() {
+      // Linear corridor nodes
+      const nodesContainer = document.getElementById('corridor-nodes');
+      if (nodesContainer) {
+        nodesContainer.innerHTML = CORRIDOR_SECTIONS.map((sec, i) => {
+          const bg = sec.status === 'Available' ? 'bg-[#22C55E] border-emerald-400' :
+                     sec.status === 'Block Planned' ? 'bg-[#F59E0B] border-amber-400 animate-pulse' :
+                     'bg-[#EF4444] border-red-400 animate-bounce';
+          return `
+            <div onclick="inspectSection('${sec.id}')" class="flex flex-col items-center cursor-pointer group">
+              <div class="w-8 h-8 rounded-full border-2 ${bg} flex items-center justify-center text-white font-bold text-xs shadow-lg group-hover:scale-125 transition">
+                ${i + 1}
+              </div>
+              <div class="mt-2 text-center">
+                <div class="font-mono text-xs font-bold text-white group-hover:text-[#FF6B00] transition">${sec.id}</div>
+                <div class="font-mono text-[10px] text-slate-400">${sec.lengthKm} km</div>
+                <span class="inline-block text-[9px] px-1.5 py-0.2 rounded font-semibold ${sec.status === 'Available' ? 'text-emerald-400 bg-emerald-500/10' : sec.status === 'Block Planned' ? 'text-amber-400 bg-amber-500/10' : 'text-red-400 bg-red-500/10'}">${sec.status}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Sections Table
+      const tbody = document.getElementById('sections-table-body');
+      if (tbody) {
+        tbody.innerHTML = CORRIDOR_SECTIONS.map(sec => `
+          <tr class="hover:bg-slate-800/40">
+            <td class="py-3 px-4 font-bold text-white">${sec.id}</td>
+            <td class="py-3 px-4 font-sans font-medium text-slate-200">${sec.name}</td>
+            <td class="py-3 px-4">${sec.lengthKm} km</td>
+            <td class="py-3 px-4 text-slate-300">${sec.tracks} Electrified</td>
+            <td class="py-3 px-4 text-amber-400">${sec.maxSpeedKmH} km/h</td>
+            <td class="py-3 px-4 text-slate-400 font-sans">${sec.division}</td>
+            <td class="py-3 px-4 font-sans">
+              <span class="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${sec.status === 'Available' ? 'bg-emerald-500/10 text-[#22C55E] border border-emerald-500/30' : sec.status === 'Block Planned' ? 'bg-amber-500/10 text-[#F59E0B] border border-amber-500/30' : 'bg-red-500/10 text-[#EF4444] border border-red-500/30'}">
+                <span class="w-1.5 h-1.5 rounded-full ${sec.status === 'Available' ? 'bg-[#22C55E]' : sec.status === 'Block Planned' ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}"></span>
+                <span>${sec.status}</span>
+              </span>
+            </td>
+            <td class="py-3 px-4 text-right font-sans">
+              <button onclick="inspectSection('${sec.id}')" class="text-[#FF6B00] hover:text-amber-400 text-xs font-semibold cursor-pointer">Inspect →</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    function inspectSection(sectionId) {
+      switchTab('tracker');
+      const select = document.getElementById('section-filter-select');
+      if (select) {
+        select.value = sectionId;
+        renderTrainTable();
+      }
+    }
+
+    // ==================== RENDER: TRAINS & TIMETABLE ====================
+    function populateSectionDropdowns() {
+      const filter = document.getElementById('section-filter-select');
+      const reqSec = document.getElementById('req-section');
+      if (filter) {
+        filter.innerHTML = `<option value="ALL">All Sections (Entire Corridor)</option>` +
+          CORRIDOR_SECTIONS.map(s => `<option value="${s.id}">${s.id} — ${s.name}</option>`).join('');
+      }
+      if (reqSec) {
+        reqSec.innerHTML = CORRIDOR_SECTIONS.map(s => `<option value="${s.id}">${s.id} — ${s.name} (${s.division} Div)</option>`).join('');
+      }
+    }
+
+    function renderTrainTable() {
+      const secFilter = document.getElementById('section-filter-select')?.value || 'ALL';
+      const search = document.getElementById('train-search-input')?.value.toLowerCase() || '';
+
+      const filtered = SAMPLE_TRAINS.filter(t => {
+        const matchesSec = secFilter === 'ALL' || t.sectionOccupancies.some(s => s.sectionId === secFilter);
+        const matchesQuery = t.number.toLowerCase().includes(search) || t.name.toLowerCase().includes(search) || t.origin.toLowerCase().includes(search) || t.destination.toLowerCase().includes(search);
+        return matchesSec && matchesQuery;
+      });
+
+      const badge = document.getElementById('train-count-badge');
+      if (badge) badge.innerText = filtered.length;
+
+      const tbody = document.getElementById('train-table-body');
+      if (!tbody) return;
+
+      tbody.innerHTML = filtered.map(t => {
+        const priorityBadge = t.priority === 'Super-Priority' ? 'bg-red-500/20 text-red-400 border border-red-500/40' :
+                              t.priority === 'High' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40' :
+                              t.priority === 'Normal' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' :
+                              'bg-slate-700 text-slate-300';
+        return `
+          <tr onclick="selectTrain('${t.id}')" class="hover:bg-slate-800/60 cursor-pointer transition">
+            <td class="py-3 px-3">
+              <div class="font-mono font-bold text-white flex items-center space-x-1">
+                <span class="text-slate-400 text-[10px]">${t.direction === 'UP' ? '▲' : '▼'}</span>
+                <span class="text-[#FF6B00]">${t.number}</span>
+              </div>
+              <div class="text-[11px] text-slate-200 font-medium truncate max-w-[130px]">${t.name}</div>
+            </td>
+            <td class="py-3 px-3">
+              <span class="inline-block text-[9px] font-bold px-1.5 py-0.2 rounded ${priorityBadge}">${t.priority}</span>
+              <div class="text-[9px] text-slate-400 mt-0.5">${t.type}</div>
+            </td>
+            <td class="py-3 px-3 text-[11px]">
+              <div class="text-white font-medium">${t.origin}</div>
+              <div class="text-slate-400 text-[10px]">➔ ${t.destination}</div>
+            </td>
+            <td class="py-3 px-3 font-mono text-[11px]">
+              <div class="text-slate-200">D: ${t.scheduledDeparture}</div>
+              <div class="text-slate-400">A: ${t.scheduledArrival}</div>
+            </td>
+            <td class="py-3 px-3 font-mono text-xs">
+              <span class="bg-[#0F172A] px-2 py-0.5 rounded text-slate-200 border border-slate-800">${t.currentSection}</span>
+            </td>
+            <td class="py-3 px-3 font-mono">
+              ${t.delayMinutes === 0 ? '<span class="text-emerald-400 font-bold text-[10px]">Right Time (RT)</span>' : `<span class="text-amber-400 font-bold text-[10px]">+${t.delayMinutes} min</span>`}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function selectTrain(trainId) {
+      const train = SAMPLE_TRAINS.find(t => t.id === trainId);
+      if (train) renderSelectedTrainTelemetry(train);
+    }
+
+    function renderSelectedTrainTelemetry(train) {
+      const panel = document.getElementById('train-details-panel');
+      if (!panel || !train) return;
+
+      panel.innerHTML = `
+        <div class="bg-[#1E293B] border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
+          <div class="flex justify-between items-start pb-4 border-b border-slate-800">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-2xl font-black font-mono text-[#FF6B00]">${train.number}</span>
+                <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono">${train.direction} Bound</span>
+              </div>
+              <h4 class="text-base font-bold text-white mt-0.5">${train.name}</h4>
+              <div class="text-xs text-slate-400 font-mono mt-1">${train.origin} ➔ ${train.destination}</div>
+            </div>
+            <div class="text-right">
+              <div class="text-[10px] font-mono text-slate-400 uppercase">Telemetry</div>
+              ${train.delayMinutes > 0 ? `<div class="text-lg font-black font-mono text-amber-400">+${train.delayMinutes}m Late</div>` : '<div class="text-lg font-black font-mono text-emerald-400">On Time</div>'}
+            </div>
+          </div>
+
+          <div class="bg-[#0F172A] p-4 rounded-xl border border-slate-800 space-y-2.5 text-xs">
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400 font-mono">Active Section:</span>
+              <span class="font-mono font-bold text-white bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">${train.currentSection}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400 font-mono">Next Station:</span>
+              <span class="font-semibold text-white">${train.nextStation}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400 font-mono">Estimated Arrival:</span>
+              <span class="font-mono font-bold text-amber-400">${train.nextStationETA} IST</span>
+            </div>
+          </div>
+
+          <div>
+            <h5 class="text-xs font-mono font-bold text-slate-400 uppercase mb-3">Corridor Timetable & Stops</h5>
+            <div class="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+              ${train.stops.map((s, idx) => `
+                <div class="flex items-center justify-between text-xs p-2 rounded-lg bg-[#0F172A]/60 border border-slate-800/80">
+                  <div class="flex items-center space-x-2">
+                    <span class="w-4 h-4 rounded-full bg-slate-800 text-slate-300 font-mono text-[9px] flex items-center justify-center font-bold">${idx + 1}</span>
+                    <span class="font-semibold text-white text-xs">${s.stationName}</span>
+                  </div>
+                  <div class="font-mono text-right text-[10px] text-slate-300">A: ${s.arr} | D: ${s.dep}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <button onclick="seeImpactOnBlockPlan('${train.number}')" class="w-full py-3 bg-gradient-to-r from-[#FF6B00] to-amber-500 hover:from-[#ff7b1a] text-white font-bold text-xs rounded-xl shadow-lg shadow-[#FF6B00]/20 transition flex items-center justify-center space-x-2 cursor-pointer">
+            <span>See Impact On Block Plan & Timeline →</span>
+          </button>
+        </div>
+      `;
+    }
+
+    function seeImpactOnBlockPlan(trainNum) {
+      switchTab('planner');
+    }
+
+    // ==================== RENDER: REQUEST FORM ====================
+    const WORK_TYPES = {
+      Engineering: [
+        'Track Renewal (PQRS Machine)',
+        'Rail Grinding Train (RGT) Operation',
+        'Ballast Deep Screening Machine (BCM)',
+        'Turnout & Switch Renewal',
+        'Bridge Girder Ultrasonic & Bearing Greasing'
+      ],
+      Electrical: [
+        'OHE Catenary Inspection & Dropper Replacement',
+        '25kV Substation Feeder Circuit Breaker Overhaul',
+        'Neutral Section Inspection & Insulator Washing',
+        'Traction Return Bond & Earthing Renewal'
+      ],
+      'Signal & Telecom': [
+        'Electronic Interlocking & Point Machine Overhaul',
+        'Digital Axle Counter (DAC) Head Calibration',
+        'Track Circuit Replacement & Cable Testing',
+        'Kavach Automatic Train Protection (ATP) Beacon Calibration'
+      ]
+    };
+
+    const TEAMS = {
+      Engineering: ['Gang-14 (Heavy Track Mechanized Rake)', 'RGT Specialist Crew 02', 'Bridges Special Division'],
+      Electrical: ['OHE Tower Wagon Team Alpha', 'Traction Power Distribution Gang 01'],
+      'Signal & Telecom': ['S&T Signal Gang 03', 'Kavach Radio Calibration Team']
+    };
+
+    function updateWorkTypeOptions() {
+      const dept = document.getElementById('req-dept')?.value || 'Engineering';
+      const wtSelect = document.getElementById('req-worktype');
+      const teamSelect = document.getElementById('req-team');
+      if (wtSelect) {
+        wtSelect.innerHTML = WORK_TYPES[dept].map(w => `<option value="${w}">${w}</option>`).join('');
+      }
+      if (teamSelect) {
+        teamSelect.innerHTML = TEAMS[dept].map(t => `<option value="${t}">${t}</option>`).join('');
+      }
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const sec = document.getElementById('req-section').value;
+      const dept = document.getElementById('req-dept').value;
+      const wt = document.getElementById('req-worktype').value;
+      const priority = document.getElementById('req-priority').value;
+      const dur = Number(document.getElementById('req-duration').value);
+      const team = document.getElementById('req-team').value;
+      const reason = document.getElementById('req-reason').value;
+
+      const newReq = {
+        id: `REQ-2026-${Math.floor(100 + Math.random() * 900)}`,
+        sectionId: sec,
+        workType: wt,
+        department: dept,
+        priority: priority,
+        minDurationMinutes: dur,
+        requiredTeam: team,
+        reason: reason,
+        status: 'Pending'
+      };
+
+      MAINTENANCE_REQUESTS.unshift(newReq);
+
+      // Audit entry
+      AUDIT_LOGS.unshift({
+        id: `AUDIT-${Date.now().toString().slice(-4)}`,
+        timestamp: '2026-09-08 09:32:10',
+        userRole: 'Sr. DEN (Co-ord)',
+        action: 'Submit Request',
+        summary: `Submitted demand ${newReq.id} on section ${newReq.sectionId} (${newReq.workType}, ${newReq.minDurationMinutes}m).`
+      });
+
+      // Show success
+      const banner = document.getElementById('request-success-banner');
+      if (banner) {
+        banner.classList.remove('hidden');
+        setTimeout(() => {
+          banner.classList.add('hidden');
+          // Update queue and switch to planner
+          renderPlannerQueue();
+          switchTab('planner');
+        }, 1200);
+      }
+    }
+
+    // ==================== RENDER: AUTOMATIC PLANNER & TIMELINE ====================
+    function renderPlannerQueue() {
+      const queue = document.getElementById('planner-requests-queue');
+      const badge = document.getElementById('nav-pending-badge');
+      if (badge) badge.innerText = MAINTENANCE_REQUESTS.filter(r => r.status === 'Pending').length;
+
+      if (!queue) return;
+      queue.innerHTML = MAINTENANCE_REQUESTS.map((req, idx) => {
+        const isSelected = req.id === ACTIVE_PLAN.requestId;
+        return `
+          <div onclick="selectRequestToPlan('${req.id}')" class="p-3.5 rounded-xl border transition cursor-pointer flex items-start space-x-3 ${isSelected ? 'bg-slate-800/90 border-[#FF6B00] shadow-md' : 'bg-[#0F172A] border-slate-800 hover:border-slate-700'}">
+            <input type="checkbox" ${isSelected ? 'checked' : ''} class="mt-1 accent-[#FF6B00] rounded">
+            <div class="flex-1">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <span class="font-mono font-bold text-white text-xs">${req.id}</span>
+                  <span class="text-[10px] font-mono bg-[#0F172A] text-amber-400 px-2 py-0.5 rounded border border-slate-800">${req.sectionId}</span>
+                  <span class="text-[9px] font-bold px-1.5 py-0.2 rounded ${req.priority === 'Critical' ? 'bg-red-500/20 text-red-400' : req.priority === 'High' ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}">${req.priority}</span>
+                </div>
+                <span class="text-[11px] font-mono text-slate-300 font-bold">${req.minDurationMinutes}m</span>
+              </div>
+              <div class="text-xs text-slate-200 font-medium mt-1">${req.workType}</div>
+              <div class="text-[10px] text-slate-400 line-clamp-1 mt-0.5">${req.reason}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectRequestToPlan(reqId) {
+      const req = MAINTENANCE_REQUESTS.find(r => r.id === reqId);
+      if (!req) return;
+
+      ACTIVE_PLAN = {
+        id: `PLAN-${req.id.slice(-4)}`,
+        requestId: req.id,
+        sectionId: req.sectionId,
+        workType: req.workType,
+        startMinute: 690,
+        durationMinutes: req.minDurationMinutes,
+        team: req.requiredTeam,
+        status: 'Proposed'
+      };
+
+      renderPlannerQueue();
+      generateCandidates(req);
+      renderGantt();
+    }
+
+    function runOptimization() {
+      const btn = document.getElementById('btn-run-optimizer');
+      if (btn) {
+        btn.innerHTML = `
+          <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+          <span>CP-SAT Optimizing...</span>
+        `;
+        btn.disabled = true;
+      }
+
+      setTimeout(() => {
+        const req = MAINTENANCE_REQUESTS.find(r => r.id === ACTIVE_PLAN.requestId) || MAINTENANCE_REQUESTS[0];
+        generateCandidates(req);
+        if (CANDIDATE_PLANS.length > 0) {
+          ACTIVE_PLAN.startMinute = CANDIDATE_PLANS[0].startMinute;
+        }
+        renderGantt();
+
+        if (btn) {
+          btn.innerHTML = `
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>Find Best Block Plan</span>
+          `;
+          btn.disabled = false;
+        }
+      }, 650);
+    }
+
+    function generateCandidates(req) {
+      const candidates = [];
+      for (let m = 60; m <= 1440 - req.minDurationMinutes; m += 30) {
+        const res = evaluateSlot(req.sectionId, m, req.minDurationMinutes);
+        candidates.push(res);
+      }
+      // Sort by score
+      candidates.sort((a, b) => b.score - a.score || a.delayMinutes - b.delayMinutes);
+
+      CANDIDATE_PLANS = candidates.slice(0, 3).map((c, i) => ({
+        id: `PLAN-${req.id.slice(-4)}-C${i+1}`,
+        requestId: req.id,
+        sectionId: req.sectionId,
+        workType: req.workType,
+        startMinute: c.startMinute,
+        endMinute: c.endMinute,
+        startTimeStr: minutesToTime(c.startMinute),
+        endTimeStr: minutesToTime(c.endMinute),
+        durationMinutes: req.minDurationMinutes,
+        team: req.requiredTeam,
+        delayMinutes: c.delayMinutes,
+        conflictCount: c.conflictCount,
+        score: c.score,
+        isRecommended: c.isRecommended,
+        reason: c.reason
+      }));
+
+      renderCandidateCards();
+    }
+
+    function renderCandidateCards() {
+      const container = document.getElementById('candidate-plans-cards');
+      if (!container) return;
+
+      container.innerHTML = CANDIDATE_PLANS.map((cand, idx) => {
+        const isSelected = ACTIVE_PLAN.startMinute === cand.startMinute;
+        return `
+          <div onclick="applyCandidate(${idx})" class="p-4 rounded-xl border transition cursor-pointer ${isSelected ? 'bg-slate-800 border-[#FF6B00] shadow-lg shadow-[#FF6B00]/20' : 'bg-[#1E293B] border-slate-800 hover:border-slate-700'}">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs font-mono font-bold text-white">Candidate ${idx + 1} ${idx === 0 ? '★ Optimal' : ''}</span>
+              <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded ${cand.isRecommended ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}">Score: ${cand.score}/100</span>
+            </div>
+            <div class="text-lg font-black font-mono text-[#FF6B00]">${cand.startTimeStr} – ${cand.endTimeStr}</div>
+            <div class="text-xs text-slate-300 mt-1 font-mono">
+              Delay: <strong class="text-white">${cand.delayMinutes}m</strong> • Conflicts: <strong class="text-white">${cand.conflictCount}</strong>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-2 line-clamp-2">${cand.reason}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function applyCandidate(idx) {
+      const cand = CANDIDATE_PLANS[idx];
+      if (cand) {
+        ACTIVE_PLAN.startMinute = cand.startMinute;
+        renderGantt();
+        renderCandidateCards();
+      }
+    }
+
+    function shiftBlock(delta) {
+      const newMinute = Math.max(0, Math.min(1440 - ACTIVE_PLAN.durationMinutes, ACTIVE_PLAN.startMinute + delta));
+      ACTIVE_PLAN.startMinute = newMinute;
+      renderGantt();
+    }
+
+    function handleTimelineSliderChange(val) {
+      ACTIVE_PLAN.startMinute = val;
+      renderGantt();
+    }
+
+    function renderGantt() {
+      const slider = document.getElementById('timeline-slider');
+      const timeLabel = document.getElementById('slider-time-label');
+      if (slider) slider.value = ACTIVE_PLAN.startMinute;
+      if (timeLabel) timeLabel.innerText = minutesToTime(ACTIVE_PLAN.startMinute);
+
+      // Evaluate active block
+      const evalRes = evaluateSlot(ACTIVE_PLAN.sectionId, ACTIVE_PLAN.startMinute, ACTIVE_PLAN.durationMinutes);
+
+      // Update outcome cards
+      document.getElementById('plan-id-display').innerText = ACTIVE_PLAN.id;
+      document.getElementById('plan-section-display').innerText = ACTIVE_PLAN.sectionId;
+      document.getElementById('plan-worktype-display').innerText = ACTIVE_PLAN.workType;
+      document.getElementById('plan-window-display').innerText = `${minutesToTime(ACTIVE_PLAN.startMinute)} – ${minutesToTime(ACTIVE_PLAN.startMinute + ACTIVE_PLAN.durationMinutes)}`;
+      document.getElementById('plan-duration-display').innerText = ACTIVE_PLAN.durationMinutes;
+      document.getElementById('plan-team-display').innerText = ACTIVE_PLAN.team;
+
+      const delayEl = document.getElementById('metric-delay');
+      delayEl.innerText = `${evalRes.delayMinutes} min`;
+      delayEl.className = `text-2xl font-black font-mono mt-0.5 ${evalRes.delayMinutes === 0 ? 'text-[#22C55E]' : evalRes.delayMinutes <= 30 ? 'text-amber-400' : 'text-[#EF4444]'}`;
+
+      const prioEl = document.getElementById('metric-priority-conflicts');
+      prioEl.innerText = `${evalRes.superPriorityCount + evalRes.highPriorityCount} Trains`;
+      prioEl.className = `text-2xl font-black font-mono mt-0.5 ${evalRes.superPriorityCount > 0 ? 'text-[#EF4444]' : evalRes.highPriorityCount > 0 ? 'text-amber-400' : 'text-[#22C55E]'}`;
+      document.getElementById('metric-priority-sub').innerText = evalRes.superPriorityCount > 0 ? 'Super-Priority impacted!' : 'Rajdhani clear';
+
+      const riskEl = document.getElementById('metric-risk');
+      riskEl.innerText = `${evalRes.riskLevel} Risk`;
+      riskEl.className = `text-2xl font-black font-mono mt-0.5 ${evalRes.riskLevel === 'Low' ? 'text-[#22C55E]' : evalRes.riskLevel === 'Medium' ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`;
+      document.getElementById('metric-score').innerText = `Score: ${evalRes.score} / 100`;
+
+      const verdictBanner = document.getElementById('verdict-banner');
+      if (evalRes.isRecommended) {
+        verdictBanner.className = 'p-4 rounded-xl border bg-emerald-950/40 border-emerald-500/40 text-emerald-300';
+        document.getElementById('verdict-title').innerText = '✓ Recommended Window';
+      } else {
+        verdictBanner.className = 'p-4 rounded-xl border bg-red-950/40 border-red-500/40 text-red-300';
+        document.getElementById('verdict-title').innerText = '✕ Not Recommended';
+      }
+      document.getElementById('verdict-reason').innerText = evalRes.reason;
+
+      // Render Hours header
+      const hoursHeader = document.getElementById('gantt-hours-header');
+      if (hoursHeader && hoursHeader.children.length === 0) {
+        hoursHeader.innerHTML = Array.from({ length: 24 }, (_, i) => `
+          <div class="text-center border-l border-slate-800/60 first:border-none">${String(i).padStart(2, '0')}:00</div>
+        `).join('');
+      }
+
+      // Render Rows
+      const rowsContainer = document.getElementById('gantt-rows');
+      if (!rowsContainer) return;
+
+      rowsContainer.innerHTML = CORRIDOR_SECTIONS.map(sec => {
+        const isTarget = sec.id === ACTIVE_PLAN.sectionId;
+
+        // Find train occupations
+        const occupations = [];
+        SAMPLE_TRAINS.forEach(t => {
+          const occ = t.sectionOccupancies.find(o => o.sectionId === sec.id);
+          if (occ) occupations.push({ train: t, occ });
+        });
+
+        // Occupations HTML
+        const trainBars = occupations.map(({ train, occ }) => {
+          const leftPct = (occ.entryMinute / 1440) * 100;
+          const widthPct = Math.max(1.8, ((occ.exitMinute - occ.entryMinute) / 1440) * 100);
+
+          const isColliding = isTarget && Math.max(0, Math.min(ACTIVE_PLAN.startMinute + ACTIVE_PLAN.durationMinutes + 15, occ.exitMinute) - Math.max(ACTIVE_PLAN.startMinute - 15, occ.entryMinute)) > 0;
+
+          let colorClass = 'bg-teal-600/80 border border-teal-400/40';
+          if (isColliding) colorClass = 'bg-red-600 border border-red-300 animate-pulse z-20 shadow-lg shadow-red-500/50';
+          else if (train.type === 'Rajdhani') colorClass = 'bg-red-700/90 border border-red-500/60 z-10';
+          else if (train.type === 'Vande Bharat') colorClass = 'bg-blue-600/90 border border-blue-400/60 z-10';
+          else if (train.type === 'Freight') colorClass = 'bg-slate-600/80 border border-slate-400/40';
+
+          return `
+            <div style="left: ${leftPct}%; width: ${widthPct}%;" class="absolute top-1 bottom-1 rounded-md px-1.5 flex items-center justify-between text-[9px] font-mono font-bold text-white shadow ${colorClass}" title="${train.number} ${train.name} (${minutesToTime(occ.entryMinute)}-${minutesToTime(occ.exitMinute)})">
+              <span class="truncate">${train.number}</span>
+              ${isColliding ? '<span class="text-white font-black ml-1">!</span>' : ''}
+            </div>
+          `;
+        }).join('');
+
+        // Block Bar
+        let blockBar = '';
+        if (isTarget) {
+          const blockLeftPct = (ACTIVE_PLAN.startMinute / 1440) * 100;
+          const blockWidthPct = (ACTIVE_PLAN.durationMinutes / 1440) * 100;
+          const blockColor = evalRes.isRecommended ? 'bg-amber-500/90 border-amber-300 text-slate-950 shadow-amber-500/40' : 'bg-red-600/90 border-red-300 text-white shadow-red-600/50';
+
+          blockBar = `
+            <div style="left: ${blockLeftPct}%; width: ${blockWidthPct}%;" class="absolute top-0 bottom-0 rounded-lg cursor-grab active:cursor-grabbing border-2 flex flex-col justify-center items-center text-center shadow-xl select-none z-30 ${blockColor}">
+              <div class="text-[10px] font-black tracking-tight leading-none px-1 truncate w-full">
+                ${evalRes.isRecommended ? 'BLOCK WINDOW' : 'CONFLICT!'}
+              </div>
+              <div class="text-[9px] font-mono leading-none mt-0.5 opacity-90">
+                ${minutesToTime(ACTIVE_PLAN.startMinute)}–${minutesToTime(ACTIVE_PLAN.startMinute + ACTIVE_PLAN.durationMinutes)}
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="relative flex items-center h-14 group">
+            <div class="w-36 flex-shrink-0 pr-3">
+              <div class="flex items-center space-x-1.5">
+                <span class="font-mono text-xs font-bold text-white group-hover:text-[#FF6B00] transition">${sec.id}</span>
+                ${isTarget ? '<span class="w-2 h-2 rounded-full bg-[#FF6B00] animate-ping"></span>' : ''}
+              </div>
+              <div class="text-[10px] text-slate-400 truncate">${sec.name.split('–')[0]}</div>
+            </div>
+            <div class="relative flex-1 h-10 rounded-lg border ${isTarget ? 'bg-slate-900/90 border-[#FF6B00]/40' : 'bg-slate-900/40 border-slate-800/80'}">
+              <div class="absolute inset-0 grid grid-cols-24 pointer-events-none">
+                ${Array.from({ length: 24 }, (_, i) => `<div class="border-r border-slate-800/40 h-full"></div>`).join('')}
+              </div>
+              ${trainBars}
+              ${blockBar}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Render Regulated Trains details
+      const conflictsBox = document.getElementById('gantt-conflicts-box');
+      const conflictsList = document.getElementById('conflicts-list-cards');
+      if (evalRes.conflictingTrains.length > 0) {
+        conflictsBox.classList.remove('hidden');
+        document.getElementById('conflicts-count-badge').innerText = evalRes.conflictingTrains.length;
+        conflictsList.innerHTML = evalRes.conflictingTrains.map(t => `
+          <div class="bg-[#0F172A] p-2.5 rounded-lg border border-red-900/40 text-xs">
+            <div class="flex justify-between font-mono">
+              <span class="font-bold text-white">${t.number}</span>
+              <span class="text-[10px] font-bold px-1.5 py-0.2 rounded ${t.priority === 'Super-Priority' ? 'bg-red-500/20 text-red-400' : t.priority === 'High' ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-700 text-slate-300'}">${t.priority}</span>
+            </div>
+            <div class="text-slate-300 truncate mt-0.5">${t.name}</div>
+            <div class="text-[10px] text-amber-400 font-mono mt-1">Delay: +${t.priority === 'Super-Priority' ? '45m' : '20m'}</div>
+          </div>
+        `).join('');
+      } else {
+        conflictsBox.classList.add('hidden');
+      }
+    }
+
+    function submitPlanForApproval() {
+      document.getElementById('audit-plan-id').innerText = ACTIVE_PLAN.id;
+      switchTab('audit');
+    }
+
+    // ==================== RENDER: WHAT-IF SIMULATION ====================
+    let CURRENT_SCENARIO = 'delay';
+
+    function selectWhatIfScenarioType(type) {
+      CURRENT_SCENARIO = type;
+      const cardD = document.getElementById('scen-card-delay');
+      const cardE = document.getElementById('scen-card-emergency');
+      if (type === 'delay') {
+        cardD.className = 'p-4 rounded-xl border border-[#FF6B00] bg-[#0F172A] cursor-pointer';
+        cardE.className = 'p-4 rounded-xl border border-slate-800 bg-[#0F172A]/50 opacity-60 cursor-pointer';
+      } else {
+        cardE.className = 'p-4 rounded-xl border border-[#FF6B00] bg-[#0F172A] cursor-pointer';
+        cardD.className = 'p-4 rounded-xl border border-slate-800 bg-[#0F172A]/50 opacity-60 cursor-pointer';
+      }
+      renderWhatIf();
+    }
+
+    function renderWhatIf() {
+      const select = document.getElementById('whatif-train-select');
+      if (select && select.children.length === 0) {
+        select.innerHTML = SAMPLE_TRAINS.map(t => `<option value="${t.number}">${t.number} — ${t.name} (${t.priority})</option>`).join('');
+      }
+
+      // Comparison table
+      const tbody = document.getElementById('whatif-comparison-body');
+      if (!tbody) return;
+
+      tbody.innerHTML = `
+        <tr>
+          <td class="py-3 px-4 font-sans font-semibold text-white">Block Time Window</td>
+          <td class="py-3 px-4">11:30 – 14:30 (180m)</td>
+          <td class="py-3 px-4 text-amber-300">11:30 – 14:30</td>
+          <td class="py-3 px-4 text-slate-400">0 min</td>
+        </tr>
+        <tr>
+          <td class="py-3 px-4 font-sans font-semibold text-white">Estimated Network Delay</td>
+          <td class="py-3 px-4 text-emerald-400 font-bold">24 min</td>
+          <td class="py-3 px-4 text-red-400 font-bold">71 min</td>
+          <td class="py-3 px-4 text-red-400 font-bold">+47 min</td>
+        </tr>
+        <tr>
+          <td class="py-3 px-4 font-sans font-semibold text-white">Conflicting Train Count</td>
+          <td class="py-3 px-4">2 Trains (Freight)</td>
+          <td class="py-3 px-4 text-amber-400">3 Trains</td>
+          <td class="py-3 px-4 text-red-400 font-bold">+1 (Rajdhani)</td>
+        </tr>
+        <tr>
+          <td class="py-3 px-4 font-sans font-semibold text-white">Super-Priority Impact (Rajdhani)</td>
+          <td class="py-3 px-4 text-emerald-400 font-semibold">Zero (Clear)</td>
+          <td class="py-3 px-4 font-semibold text-red-400">CRITICAL OVERLAP</td>
+          <td class="py-3 px-4"><span class="text-red-400 font-bold">⚠️ Violation</span></td>
+        </tr>
+        <tr>
+          <td class="py-3 px-4 font-sans font-semibold text-white">Safety & Risk Assessment</td>
+          <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300">Low</span></td>
+          <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] bg-red-500/20 text-red-300 font-bold">High</span></td>
+          <td class="py-3 px-4 font-sans text-xs text-red-400">Risk Elevated</td>
+        </tr>
+      `;
+    }
+
+    function applyWhatIfScenario() {
+      const trainNum = document.getElementById('whatif-train-select')?.value || '12301';
+      const delay = Number(document.getElementById('whatif-delay-slider')?.value || 47);
+
+      document.getElementById('trigger-train-num').innerText = trainNum;
+      document.getElementById('trigger-delay-num').innerText = delay;
+
+      // Update train delay
+      const train = SAMPLE_TRAINS.find(t => t.number === trainNum);
+      if (train) {
+        train.delayMinutes += delay;
+        train.sectionOccupancies.forEach(occ => {
+          occ.entryMinute = (occ.entryMinute + delay) % 1440;
+          occ.exitMinute = (occ.exitMinute + delay) % 1440;
+        });
+      }
+
+      // Mark PRYJ-DDU as Conflict
+      const sec = CORRIDOR_SECTIONS.find(s => s.id === 'PRYJ-DDU');
+      if (sec) sec.status = 'Conflict';
+
+      AUDIT_LOGS.unshift({
+        id: `AUDIT-${Date.now().toString().slice(-4)}`,
+        timestamp: '2026-09-08 09:33:05',
+        userRole: 'Safety Officer',
+        action: 'Simulate Scenario',
+        summary: `What-If Simulation applied: Train ${trainNum} delayed by +${delay}m. Conflict flagged on PRYJ-DDU.`
+      });
+
+      alert(`Scenario applied! Train ${trainNum} delayed by +${delay}m. Direct conflict detected with PLAN-7701.`);
+    }
+
+    function approveNewPlan() {
+      // Auto-shift block to 14:30 - 17:30
+      ACTIVE_PLAN.startMinute = 870;
+      ACTIVE_PLAN.id = 'REPLAN-7701';
+
+      AUDIT_LOGS.unshift({
+        id: `AUDIT-${Date.now().toString().slice(-4)}`,
+        timestamp: '2026-09-08 09:34:00',
+        userRole: 'Chief Controller (Traffic)',
+        action: 'Auto-Replan',
+        summary: `Approved Dynamic Re-Plan REPLAN-7701. Window shifted to 14:30-17:30 to bypass delayed train.`
+      });
+
+      // Restore section status
+      const sec = CORRIDOR_SECTIONS.find(s => s.id === 'PRYJ-DDU');
+      if (sec) sec.status = 'Block Planned';
+
+      alert('AI Dynamic Re-Plan approved! Window shifted to 14:30–17:30. Zero conflicts.');
+      switchTab('planner');
+    }
+
+    // ==================== RENDER: AUDIT ====================
+    function renderAudit() {
+      const tbody = document.getElementById('audit-logs-table-body');
+      if (!tbody) return;
+
+      tbody.innerHTML = AUDIT_LOGS.map(log => {
+        const actionBadge = log.action === 'Approve' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' :
+                            log.action === 'Reject' ? 'bg-red-500/20 text-red-300 border border-red-500/40' :
+                            log.action === 'Auto-Replan' ? 'bg-violet-500/20 text-violet-300 border border-violet-500/40' :
+                            'bg-slate-700 text-slate-200';
+        return `
+          <tr class="hover:bg-slate-800/40">
+            <td class="py-2.5 px-3 text-slate-400 whitespace-nowrap">${log.timestamp}</td>
+            <td class="py-2.5 px-3 font-sans font-semibold text-white whitespace-nowrap">${log.userRole}</td>
+            <td class="py-2.5 px-3 whitespace-nowrap">
+              <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold ${actionBadge}">${log.action}</span>
+            </td>
+            <td class="py-2.5 px-3 font-sans text-slate-300 leading-snug">${log.summary}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function handleAuditAction(action) {
+      const role = document.getElementById('audit-officer-role').value;
+      const remarks = document.getElementById('audit-officer-remarks').value;
+
+      AUDIT_LOGS.unshift({
+        id: `AUDIT-${Date.now().toString().slice(-4)}`,
+        timestamp: '2026-09-08 09:34:55',
+        userRole: role.split('—')[0].trim(),
+        action: action,
+        summary: `Plan ${ACTIVE_PLAN.id} marked as ${action}ed by ${role.split('—')[0].trim()}. Note: ${remarks || 'Sanctioned under standard operating protocol.'}`
+      });
+
+      document.getElementById('audit-plan-status').innerText = `Status: ${action}ed`;
+      document.getElementById('audit-plan-status').className = `text-xs px-2 py-0.5 rounded font-mono font-bold ${action === 'Approve' ? 'bg-emerald-500/20 text-emerald-300' : action === 'Reject' ? 'bg-red-500/20 text-red-300' : 'bg-amber-500/20 text-amber-300'}`;
+
+      renderAudit();
+      alert(`Decision recorded! Plan ${ACTIVE_PLAN.id} marked as ${action}ed.`);
+    }
+
+    // ==================== SYSTEM CLOCK ====================
+    setInterval(() => {
+      const now = new Date();
+      const str = now.toTimeString().split(' ')[0] + ' IST';
+      const el = document.getElementById('clock-display');
+      if (el) el.innerText = str;
+    }, 1000);
+
+    // Initial setup on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      populateSectionDropdowns();
+      updateWorkTypeOptions();
+      renderDashboard();
+      renderTrainTable();
+      renderSelectedTrainTelemetry(SAMPLE_TRAINS[0]);
+      renderPlannerQueue();
+      generateCandidates(MAINTENANCE_REQUESTS[0]);
+      renderGantt();
+      renderWhatIf();
+      renderAudit();
+    });
+  </script>
+</body>
 </html>
