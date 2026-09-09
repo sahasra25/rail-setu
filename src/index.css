@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #0F172A;
+  color: #F8FAFC;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Custom Scrollbar for railway control center aesthetic */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0F172A;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #FF6B00;
+}
+
+/* Pulsing animations */
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.9; box-shadow: 0 0 15px rgba(255, 107, 0, 0.4); }
+  50% { opacity: 0.5; box-shadow: 0 0 5px rgba(255, 107, 0, 0.1); }
+}
+.pulse-glow {
+  animation: pulseGlow 2.5s infinite;
+}

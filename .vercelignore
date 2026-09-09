@@ -1,0 +1,9 @@
+.git
+node_modules
+railsetu-portable.zip
+_temp_export.zip
+export.py
+server.py
+start.bat
+start.sh
+*.log
